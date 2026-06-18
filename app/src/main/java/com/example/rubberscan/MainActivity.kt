@@ -9,6 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.rubberscan.SplashScreen
 import com.example.rubberscan.WelcomeScreen
 
@@ -20,28 +23,38 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             RubberScanTheme {
+                val navController = rememberNavController()
 
-                var showSplash by remember {
-                    mutableStateOf(true)
-                }
+                NavHost(
+                    navController = navController,
+                    startDestination = "splash"
+                ) {
+                    composable("splash") {
+                        SplashScreen(
+                            onComplete = {
+                                navController.navigate("welcome")
+                            }
+                        )
+                    }
 
-                if (showSplash) {
+                    composable("welcome") {
+                        WelcomeScreen(
+                            onGetStarted = {},
+                            onLogin = {},
+                            onRegister = {},
+                            onGuest = {
+                                navController.navigate("home")
+                            }
+                        )
+                    }
 
-                    SplashScreen(
-                        onComplete = {
-                            showSplash = false
-                        }
-                    )
-
-                } else {
-
-                    WelcomeScreen(
-                        onGetStarted = {},
-                        onLogin = {},
-                        onRegister = {},
-                        onGuest = {}
-                    )
-
+                    composable("home") {
+                        HomeScreen(
+                            onNavigate = { route ->
+                                navController.navigate(route)
+                            }
+                        )
+                    }
                 }
             }
         }
