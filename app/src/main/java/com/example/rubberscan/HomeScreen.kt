@@ -1,5 +1,6 @@
 package com.example.rubberscan
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,7 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -70,17 +74,18 @@ data class RecentInspection(
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit = {}) {
 
-    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    val greeting = when {
-        hour < 12 -> "Good morning"
-        hour < 18 -> "Good afternoon"
-        else      -> "Good evening"
+    val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+    val greeting = when (currentHour) {
+        in 0..11 -> "Good Morning"
+        in 12..17 -> "Good Afternoon"
+        else -> "Good Evening"
     }
 
     val quickActions = listOf(
         QuickAction(Icons.Default.DocumentScanner, "Scan Leaf",     GreenDark,  GreenLight,  "scan"),
         QuickAction(Icons.Default.History,          "View History",  BlueDark,   BlueLight,   "history"),
-        QuickAction(Icons.Default.MenuBook,         "Disease Guide", PurpleDark, PurpleLight, "disease-guide"),
+        QuickAction(Icons.AutoMirrored.Filled.MenuBook,         "Disease Guide", PurpleDark, PurpleLight, "disease-guide"),
         QuickAction(Icons.Default.Bluetooth,        "Pair Sensor",   TealDark,   TealLight,   "ble-pairing")
     )
 
@@ -111,8 +116,33 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                 .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 72.dp)
         ) {
             Column {
-                Text("$greeting 👋", color = Color(0xFFA5D6A7), fontSize = 13.sp)
-                Text("Juan dela Cruz", color = Color.White,
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if(currentHour in 0..11) {
+                        Image(
+                            painterResource(R.drawable.morning),
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            colorFilter = ColorFilter.tint(Color.White)
+                        )
+                    } else if(currentHour in 12..17) {
+                        Image(
+                            painterResource(R.drawable.afternoon),
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            colorFilter = ColorFilter.tint(Color.White)
+                        )
+                    } else {
+                        Image(
+                            painterResource(R.drawable.evening),
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            colorFilter = ColorFilter.tint(Color.White)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("$greeting,", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+                Text("Chaquella!", color = Color.White,
                     fontSize = 21.sp, fontWeight = FontWeight.Bold)
                 Text("📍 Marilog District Plantation",
                     color = Color(0xFFA5D6A7), fontSize = 12.sp)

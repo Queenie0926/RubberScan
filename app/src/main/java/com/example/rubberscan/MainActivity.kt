@@ -55,6 +55,12 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+                    composable("ble-pairing") {
+                        BLEPairingScreen(
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }
