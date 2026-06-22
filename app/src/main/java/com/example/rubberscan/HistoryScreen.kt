@@ -52,13 +52,13 @@ private val sampleRecords = listOf(
     InspectionRecord(7, "Jun 3, 2026",  "09:00 AM", "PLFD",    "Severe",   "31.2°C", "88%", Color(0xFFC62828), Color(0xFFFFEBEE), "🍂")
 )
 
-private val filters = listOf("All", "Healthy", "PLFD", "CLF", "Mildew")
+private val filters = listOf("All", "Healthy", "PLFD", "CLF", "Powdery Mildew")
 
 // ── History Screen ─────────────────────────────────────────
 @Composable
 fun HistoryScreen(
     onBack: () -> Unit = {},
-    onSelectRecord: () -> Unit = {}
+    onHistoryDetail: () -> Unit
 ) {
     var activeFilter by remember { mutableStateOf("All") }
 
@@ -174,7 +174,7 @@ fun HistoryScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             filtered.forEach { record ->
-                InspectionRecordRow(record = record, onClick = onSelectRecord)
+                InspectionRecordRow(record = record, onClick = onHistoryDetail)
             }
             Spacer(Modifier.height(16.dp))
         }

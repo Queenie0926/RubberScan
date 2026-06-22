@@ -61,6 +61,27 @@ class MainActivity : ComponentActivity() {
                             onBack = { navController.popBackStack() }
                         )
                     }
+
+                    composable("history") {
+                        HistoryScreen(
+                            onBack = { navController.popBackStack() },
+                            onHistoryDetail = {
+                                navController.navigate("history-detail")
+                            }
+                        )
+                    }
+
+                    composable("history-detail") {
+                        HistoryDetailScreen(
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable("disease") {
+                        DiseaseGuideScreen(
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }
