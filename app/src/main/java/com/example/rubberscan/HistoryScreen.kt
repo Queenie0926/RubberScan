@@ -47,7 +47,7 @@ private val sampleRecords = listOf(
     InspectionRecord(2, "Jun 8, 2026",  "02:30 PM", "PLFD",    "Mild",     "29.1°C", "74%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🍂"),
     InspectionRecord(3, "Jun 7, 2026",  "11:05 AM", "Healthy", "None",     "27.8°C", "68%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
     InspectionRecord(4, "Jun 6, 2026",  "08:50 AM", "CLF",     "Moderate", "30.3°C", "82%", Color(0xFFE65100), Color(0xFFFFF3E0), "🍁"),
-    InspectionRecord(5, "Jun 5, 2026",  "03:15 PM", "Mildew",  "Mild",     "28.7°C", "65%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🌫️"),
+    InspectionRecord(5, "Jun 5, 2026",  "03:15 PM", "Powdery Mildew",  "Mild",     "28.7°C", "65%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🌫️"),
     InspectionRecord(6, "Jun 4, 2026",  "10:30 AM", "Healthy", "None",     "26.9°C", "69%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
     InspectionRecord(7, "Jun 3, 2026",  "09:00 AM", "PLFD",    "Severe",   "31.2°C", "88%", Color(0xFFC62828), Color(0xFFFFEBEE), "🍂")
 )
@@ -106,18 +106,6 @@ fun HistoryScreen(
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold)
-                }
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.White.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.FilterList,
-                        contentDescription = "Filter",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp))
                 }
             }
 
