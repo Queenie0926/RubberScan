@@ -179,38 +179,6 @@ fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
                 Text("Disease Guide", color = Color.White,
                     fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Search bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp, vertical = 10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Search, contentDescription = null,
-                        tint = Color(0xFFA5D6A7), modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (search.isEmpty()) {
-                            Text("Search diseases...",
-                                color = Color(0xFFA5D6A7), fontSize = 14.sp)
-                        }
-                        BasicTextField(
-                            value = search,
-                            onValueChange = { search = it },
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                color = Color.White, fontSize = 14.sp),
-                            singleLine = true,
-                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.White),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
         }
 
         // ── Disease List ────────────────────────────────────
@@ -221,6 +189,36 @@ fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Search bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.LightGray.copy(alpha = 0.15f))
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Search, contentDescription = null,
+                        tint = Color(0xFFA5D6A7), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Box(modifier = Modifier.weight(1f)
+                    ) {
+                        if (search.isEmpty()) {
+                            Text("Search diseases",
+                                color = Color.LightGray, fontSize = 14.sp)
+                        }
+                        BasicTextField(
+                            value = search,
+                            onValueChange = { search = it },
+                            textStyle = androidx.compose.ui.text.TextStyle(
+                                color = Color.DarkGray, fontSize = 14.sp),
+                            singleLine = true,
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.LightGray),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
             filtered.forEach { disease ->
                 DiseaseListItem(disease = disease, onClick = { selected = disease })
             }
