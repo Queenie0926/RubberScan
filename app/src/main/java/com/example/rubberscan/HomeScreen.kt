@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +26,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Calendar
+
+// ── Bottom Nav Item model ───────────────────────────────────
+private data class BottomNavItem(
+    val icon: ImageVector,
+    val label: String,
+    val route: String
+)
 
 // ── Colour tokens ──────────────────────────────────────────
 private val GreenDark   = Color(0xFF1B5E20)
@@ -77,16 +85,18 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
     val greeting = when (currentHour) {
-        in 0..11 -> "Good Morning"
-        in 12..17 -> "Good Afternoon"
-        else -> "Good Evening"
+        in 0..11 -> "Good morning"
+        in 12..17 -> "Good afternoon"
+        else -> "Good evening"
     }
 
     val quickActions = listOf(
+        QuickAction(Icons.Default.Bluetooth,        "Pair Sensor",   BlueDark,   BlueLight,   "ble-pairing"),
         QuickAction(Icons.Default.DocumentScanner, "Scan Leaf",     GreenDark,  GreenLight,  "scan"),
-        QuickAction(Icons.Default.History,          "View History",  BlueDark,   BlueLight,   "history"),
-        QuickAction(Icons.AutoMirrored.Filled.MenuBook,         "Disease Guide", PurpleDark, PurpleLight, "disease-guide"),
-        QuickAction(Icons.Default.Bluetooth,        "Pair Sensor",   TealDark,   TealLight,   "ble-pairing")
+        QuickAction(Icons.AutoMirrored.Filled.MenuBook,         "Disease Guide", OrangeDark, OrangeLight, "disease-guide"),
+        QuickAction(Icons.Default.History,          "View History",  PurpleDark,   PurpleLight,   "history")
+
+
     )
 
     val statusCards = listOf(
@@ -113,7 +123,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 72.dp)
+                .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 65.dp)
         ) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -142,8 +152,10 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                     Spacer(modifier = Modifier.width(5.dp))
                     Text("$greeting,", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
+                Spacer(modifier = Modifier.height(3.dp))
                 Text("Chaquella!", color = Color.White,
                     fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(3.dp))
                 Text("📍 Marilog District Plantation",
                     color = Color(0xFFA5D6A7), fontSize = 12.sp)
             }
@@ -217,6 +229,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                             color = BorderGray)
                         Column(modifier = Modifier.weight(1f),
                             horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(Modifier.height(6.dp))
                             Box(modifier = Modifier
                                 .size(10.dp)
                                 .clip(CircleShape)
@@ -317,6 +330,70 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+// ── Bottom Navigation Bar ───────────────────────────────────
+@Composable
+fun AppBottomNavBar(currentRoute: String, onNavigate: (String) -> Unit) {
+    val items = listOf(
+        BottomNavItem(Icons.Default.Home,            "Home",    "home"),
+        BottomNavItem(Icons.Default.CropFree,        "Scan",    "scan"),
+        BottomNavItem(Icons.Default.History,         "History", "history"),
+        BottomNavItem(Icons.AutoMirrored.Filled.MenuBook, "Guide",   "disease-guide"),
+        BottomNavItem(Icons.Default.Person,          "Profile", "profile")
+    )
+
+    Surface(
+        color = Color.White,
+        shadowElevation = 12.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(64.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEach { item ->
+                val isSelected = currentRoute == item.route
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                        ) { if (!isSelected) onNavigate(item.route) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) GreenLight else Color.Transparent),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = if (isSelected) GreenDark else Color(0xFFB0B0B0),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = item.label,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) GreenDark else Color(0xFFB0B0B0)
+                    )
+                }
+            }
         }
     }
 }

@@ -77,7 +77,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(ProfileGreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 96.dp)
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

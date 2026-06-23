@@ -73,7 +73,7 @@ fun SeverityScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF1B5E20))
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 24.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(

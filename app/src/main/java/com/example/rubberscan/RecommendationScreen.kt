@@ -114,7 +114,7 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(RecGreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 24.dp)
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -132,12 +132,6 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
                 Text("Recommendations", color = Color.White,
                     fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Based on: Pestalotiopsis LFD – Moderate Severity",
-                color = Color(0xFFA5D6A7),
-                fontSize = 12.sp
-            )
         }
 
         // ── Recommendation Cards ─────────────────────────────
@@ -145,6 +139,13 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+                Text(
+                    "Based on: Pestalotiopsis LFD – Moderate Severity",
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
             recommendations.forEach { rec ->
                 RecommendationCard(rec = rec)
             }
