@@ -30,6 +30,11 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.draw.rotate
 
 // ── Data model ─────────────────────────────────────────────
 data class OnboardPage(
@@ -39,6 +44,7 @@ data class OnboardPage(
     val bgLight: Color,
     val illustration: @Composable () -> Unit
 )
+
 
 // ── Pages ──────────────────────────────────────────────────
 private val onboardPages = listOf(
@@ -79,12 +85,12 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
 
         // ── Skip ────────────────────────────────────────────
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 25.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Text(
                 "Skip",
-                color = Color(0xFF9E9E9E),
+                color = Color(0xFF000000),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
@@ -251,61 +257,164 @@ fun ScanIllustration() {
 }
 
 // ── Illustration 2: Sensor ───────────────────────────────────
+
 @Composable
-fun SensorIllustration() {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val scale = size.width / 220f
+fun Leaf(
+    modifier: Modifier = Modifier,
+    color: Color = Color(0xFF4CAF50)
+) {
+    Canvas(modifier = modifier) {
 
-        // Device body
-        drawRoundRect(
-            color = Color.White,
-            topLeft = Offset(70f * scale, 50f * scale),
-            size = Size(80f * scale, 100f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(14f * scale),
-            style = Stroke(width = 2f * scale)
+        // Leaf body
+        drawOval(
+            color = color,
+            size = Size(size.width, size.height)
         )
-        // Screen
-        drawRoundRect(
-            color = Color(0xFFE3F2FD),
-            topLeft = Offset(80f * scale, 62f * scale),
-            size = Size(60f * scale, 50f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f * scale)
-        )
-        // Humidity bar
-        drawRoundRect(
-            color = Color(0xFFE3F2FD),
-            topLeft = Offset(82f * scale, 120f * scale),
-            size = Size(56f * scale, 10f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(5f * scale)
-        )
-        drawRoundRect(
-            color = Color(0xFF2196F3),
-            topLeft = Offset(82f * scale, 120f * scale),
-            size = Size(38f * scale, 10f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(5f * scale)
-        )
-        // Leaves beside sensor
-        rotate(30f, pivot = Offset(50f * scale, 100f * scale)) {
-            drawOval(Color(0xFF4CAF50), topLeft = Offset(32f * scale, 72f * scale), size = Size(36f * scale, 56f * scale))
-        }
-        rotate(-25f, pivot = Offset(165f * scale, 95f * scale)) {
-            drawOval(Color(0xFF66BB6A), topLeft = Offset(151f * scale, 73f * scale), size = Size(28f * scale, 44f * scale))
-        }
-    }
 
-    // Text overlays (Compose Text on top of canvas)
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.align(Alignment.Center).offset(y = (-18).dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("28°", color = Color(0xFF0D47A1), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Text("TEMPERATURE", color = Color(0xFF1565C0), fontSize = 9.sp)
-            Spacer(Modifier.height(22.dp))
-            Text("Humidity: 68%", color = Color(0xFF546E7A), fontSize = 10.sp)
-        }
+        // Center vein
+        drawLine(
+            color = Color(0xFF2E7D32),
+            start = Offset(size.width / 2, size.height * 0.15f),
+            end = Offset(size.width / 2, size.height * 0.85f),
+            strokeWidth = 3f
+        )
     }
 }
+@Composable
+fun SensorIllustration() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+
+        // Left Leaf
+        Leaf(
+            modifier = Modifier
+                .offset(x = (-75).dp, y = 5.dp)
+                .size(width = 45.dp, height = 80.dp)
+                .rotate(-25f),
+            color = Color(0xFF4CAF50)
+        )
+
+        // Right Leaf
+        Leaf(
+            modifier = Modifier
+                .offset(x = 75.dp, y = 5.dp)
+                .size(width = 38.dp, height = 70.dp)
+                .rotate(20f),
+            color = Color(0xFF66BB6A)
+        )
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+
+            // Main Card
+            Card(
+                modifier = Modifier
+                    .size(width = 130.dp, height = 180.dp)
+                    .offset(y = 12.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                border = BorderStroke(
+                    2.dp,
+                    Color(0xFF90CAF9)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Spacer(Modifier.height(24.dp))
+
+                    // Temperature Card
+                    // ...
+                }
+            }
+
+            // Floating WiFi Icon
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-10).dp),
+                shape = CircleShape,
+                color = Color.White,
+                shadowElevation = 6.dp
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Wifi,
+                    contentDescription = null,
+                    tint = Color(0xFF66BB6A),
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(30.dp)
+                )
+            }
+        }
+
+                Spacer(Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.offset(y = 25.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Card(
+                modifier = Modifier
+                    .width(95.dp)
+                    .height(75.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFE3F2FD)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "28°",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1565C0)
+                    )
+
+                    Text(
+                        text = "TEMPERATURE",
+                        fontSize = 8.sp,
+                        color = Color(0xFF1976D2)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LinearProgressIndicator(
+                progress = { 0.68f },
+                modifier = Modifier
+                    .width(72.dp)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(50)),
+                color = Color(0xFF2196F3),
+                trackColor = Color(0xFFD6EAF8)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Humidity: 68%",
+                fontSize = 10.sp,
+                color = Color(0xFF546E7A)
+            )
+        }
+        }
+            }
+
 
 // ── Illustration 3: Alert ────────────────────────────────────
 @Composable
