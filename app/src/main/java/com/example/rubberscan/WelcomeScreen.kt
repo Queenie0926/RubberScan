@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.BorderStroke
 @Composable
 fun WelcomeScreen(
     onGetStarted: () -> Unit,
@@ -65,7 +66,7 @@ fun WelcomeScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "Luntian",
+                    text = "BantayGoma",
                     color = Color.White,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -115,10 +116,16 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row {
-
                         OutlinedButton(
                             onClick = onLogin,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF2E7D32)
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                Color(0xFF2E7D32)
+                            )
                         ) {
 
                             Icon(
@@ -139,7 +146,14 @@ fun WelcomeScreen(
 
                         OutlinedButton(
                             onClick = onRegister,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF1565C0)
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                Color(0xFF1565C0)
+                            )
                         ) {
 
                             Icon(
@@ -159,7 +173,10 @@ fun WelcomeScreen(
 
                     TextButton(
                         onClick = onGuest,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Black
+                        )
                     ) {
 
                         Icon(
