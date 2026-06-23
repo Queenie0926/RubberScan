@@ -14,7 +14,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.rubberscan.SplashScreen
 import com.example.rubberscan.WelcomeScreen
-import com.example.rubberscan.navigation.MainScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,56 +28,25 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = "splash"
-
                 ) {
                     composable("splash") {
                         SplashScreen(
                             onComplete = {
-                                navController.navigate("onboarding") {
-                                    popUpTo("splash") {
-                                        inclusive = true
-                                    }
-                                }
-                            }
-                        )
-                    }
-
-                    composable("onboarding") {
-                        OnboardingScreen(
-                            onComplete = {
-                                navController.navigate("welcome") {
-                                    popUpTo("onboarding") {
-                                        inclusive = true
-                                    }
-                                }
+                                navController.navigate("welcome")
                             }
                         )
                     }
 
                     composable("welcome") {
                         WelcomeScreen(
-                            onGetStarted = {
-                                navController.navigate("main")
-                            },
-
-                            onLogin = {
-                                navController.navigate("login")
-                            },
-
-                            onRegister = {
-                                navController.navigate("register")
-                            },
-
+                            onGetStarted = {},
+                            onLogin = {},
+                            onRegister = {},
                             onGuest = {
-                                navController.navigate("main")
+                                navController.navigate("home")
                             }
                         )
                     }
-
-                    composable("main") {
-                        MainScreen()
-                    }
-
 
                     composable("home") {
                         HomeScreen(
