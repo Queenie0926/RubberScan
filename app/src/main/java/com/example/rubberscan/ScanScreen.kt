@@ -1,5 +1,16 @@
 package com.example.rubberscan
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -15,21 +26,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import java.io.File
+import java.util.concurrent.Executors
 
 // ── Scan Screen ────────────────────────────────────────────
 @Composable
@@ -37,50 +51,54 @@ fun ScanScreen(
     onBack: () -> Unit = {},
     onCapture: () -> Unit = {}
 ) {
+    val context        = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> hasCameraPermission = granted }
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    if (!hasCameraPermission) {
+        CameraPermissionDenied(onBack = onBack, onRequest = {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        })
+        return
+    }
+
+    val imageCapture = remember { ImageCapture.Builder().build() }
+    var isCapturing  by remember { mutableStateOf(false) }
+
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
-        // ── Background gradient (camera preview simulation) ──
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF1A3A1A),
-                            Color(0xFF2D5A2D),
-                            Color(0xFF1A3A1A)
-                        )
-                    )
-                )
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
-                val cx = w * 0.5f
-                val cy = h * 0.5f
-                rotate(-10f, pivot = Offset(cx, cy)) {
-                    drawOval(
-                        color = Color(0xFF4CAF50).copy(alpha = 0.3f),
-                        topLeft = Offset(cx - w * 0.36f, cy - h * 0.13f),
-                        size = androidx.compose.ui.geometry.Size(w * 0.72f, h * 0.26f)
-                    )
-                }
-                drawLine(
-                    Color(0xFF2E7D32).copy(alpha = 0.3f),
-                    Offset(cx - w * 0.19f, cy), Offset(cx + w * 0.19f, cy),
-                    strokeWidth = 3f
-                )
-            }
-        }
+        // ── Live Camera Preview ──────────────────────────────
+        CameraPreview(
+            modifier       = Modifier.fillMaxSize(),
+            imageCapture   = imageCapture,
+            lifecycleOwner = lifecycleOwner
+        )
 
+        // ── UI Overlay ───────────────────────────────────────
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // ── Top Bar ─────────────────────────────────────
+            // ── Top Bar ──────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 48.dp),
+                    .padding(top = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -123,10 +141,9 @@ fun ScanScreen(
             }
 
             // ── Sensor Panel ──────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 12.dp)
+            Box(modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -163,7 +180,7 @@ fun ScanScreen(
                 }
             }
 
-            // ── Leaf Guide Frame ───────────────────────────────
+            // ── Leaf Guide Frame ──────────────────────────────
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -176,13 +193,11 @@ fun ScanScreen(
                     modifier = Modifier.size(256.dp, 176.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Corner brackets + dashed leaf outline + scan line
                     LeafGuideOverlay()
                 }
 
                 Spacer(Modifier.height(24.dp))
 
-                // Instruction box
                 Column(
                     modifier = Modifier
                         .widthIn(max = 280.dp)
@@ -191,169 +206,229 @@ fun ScanScreen(
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        "Place a rubber leaf inside the guide frame.",
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
-                    )
+                    Text("Place a rubber leaf inside the guide frame.",
+                        color = Color.White, fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        "Hold steady for best results",
-                        color = Color(0xFFBDBDBD),
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center
-                    )
+                    Text("Hold steady for best results",
+                        color = Color(0xFFBDBDBD), fontSize = 11.sp,
+                        textAlign = TextAlign.Center)
                 }
             }
 
-            // ── Bottom Controls ─────────────────────────────────
-            Row(
+            // ── Capture Button ────────────────────────────────
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 40.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(bottom = 48.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Gallery button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Image, contentDescription = "Gallery",
-                        tint = Color.White, modifier = Modifier.size(22.dp))
-                }
-
-                // Capture button
                 Box(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.2f))
-                        .clickable { onCapture() },
+                        .background(Color.White.copy(alpha = if (isCapturing) 0.1f else 0.2f))
+                        .clickable(enabled = !isCapturing) {
+                            isCapturing = true
+                            capturePhoto(
+                                context      = context,
+                                imageCapture = imageCapture,
+                                onSuccess    = { onCapture() },
+                                onError      = { isCapturing = false }
+                            )
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(Color.Transparent),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // White ring border
-                        Canvas(modifier = Modifier.matchParentSize()) {
-                            drawCircle(
-                                color = Color.White,
-                                radius = size.minDimension / 2 - 2.dp.toPx(),
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
+                    Canvas(modifier = Modifier.matchParentSize()) {
+                        drawCircle(
+                            color  = Color.White,
+                            radius = size.minDimension / 2 - 2.dp.toPx(),
+                            style  = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
                         )
                     }
+                    if (isCapturing) {
+                        CircularProgressIndicator(
+                            modifier    = Modifier.size(40.dp),
+                            color       = Color.White,
+                            strokeWidth = 3.dp
+                        )
+                    } else {
+                        Box(modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(Color.White))
+                    }
                 }
-
-                // Spacer to balance layout
-                Spacer(modifier = Modifier.size(48.dp))
             }
         }
     }
 }
 
-// ── Pulsing "Live" Dot ─────────────────────────────────────
+// ── CameraX Preview ─────────────────────────────────────────
+@Composable
+fun CameraPreview(
+    modifier: Modifier,
+    imageCapture: ImageCapture,
+    lifecycleOwner: androidx.lifecycle.LifecycleOwner
+) {
+    AndroidView(
+        factory = { ctx ->
+            val previewView = PreviewView(ctx)
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.surfaceProvider = previewView.surfaceProvider
+                }
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        preview,
+                        imageCapture
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }, ContextCompat.getMainExecutor(ctx))
+
+            previewView
+        },
+        modifier = modifier
+    )
+}
+
+// ── Capture logic ────────────────────────────────────────────
+private fun capturePhoto(
+    context: Context,
+    imageCapture: ImageCapture,
+    onSuccess: () -> Unit,
+    onError: () -> Unit
+) {
+    val outputFile    = File(context.cacheDir, "scan_${System.currentTimeMillis()}.jpg")
+    val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile).build()
+    val executor      = Executors.newSingleThreadExecutor()
+
+    imageCapture.takePicture(
+        outputOptions,
+        executor,
+        object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                ContextCompat.getMainExecutor(context).execute { onSuccess() }
+            }
+            override fun onError(exc: ImageCaptureException) {
+                exc.printStackTrace()
+                ContextCompat.getMainExecutor(context).execute { onError() }
+            }
+        }
+    )
+}
+
+// ── Permission Denied Screen ─────────────────────────────────
+@Composable
+private fun CameraPermissionDenied(onBack: () -> Unit, onRequest: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(Icons.Default.CameraAlt, contentDescription = null,
+                tint = Color.White.copy(alpha = 0.4f),
+                modifier = Modifier.size(64.dp))
+            Spacer(Modifier.height(16.dp))
+            Text("Camera Permission Required",
+                color = Color.White, fontSize = 18.sp,
+                fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(8.dp))
+            Text("RubberScan needs camera access to scan rubber leaves.",
+                color = Color(0xFFBDBDBD), fontSize = 14.sp,
+                textAlign = TextAlign.Center)
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = onRequest,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Grant Permission", color = Color.White,
+                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(Modifier.height(12.dp))
+            TextButton(onClick = onBack) {
+                Text("Go Back", color = Color(0xFFBDBDBD), fontSize = 14.sp)
+            }
+        }
+    }
+}
+
+// ── Pulsing Dot ────────────────────────────────────────────
 @Composable
 fun PulsingDot() {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.3f,
+        initialValue  = 1f,
+        targetValue   = 0.3f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = LinearEasing),
+            animation  = tween(800, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseAlpha"
     )
-    Box(
-        modifier = Modifier
-            .size(8.dp)
-            .clip(CircleShape)
-            .background(Color(0xFF4CAF50).copy(alpha = alpha))
-    )
+    Box(modifier = Modifier
+        .size(8.dp)
+        .clip(CircleShape)
+        .background(Color(0xFF4CAF50).copy(alpha = alpha)))
 }
 
-// ── Leaf Guide Overlay (brackets + dashed outline + scan line) ─
+// ── Leaf Guide Overlay ─────────────────────────────────────
 @Composable
 fun LeafGuideOverlay() {
     val infiniteTransition = rememberInfiniteTransition(label = "scanline")
     val scanPosition by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.8f,
+        initialValue  = 0.2f,
+        targetValue   = 0.8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = LinearEasing),
+            animation  = tween(2500, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scanY"
     )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        val w = size.width
-        val h = size.height
+        val w          = size.width
+        val h          = size.height
         val bracketLen = 28.dp.toPx()
-        val strokeW = 3.dp.toPx()
+        val strokeW    = 3.dp.toPx()
 
-        // Corner brackets
-        // top-left
         drawLine(Color.White, Offset(0f, bracketLen), Offset(0f, 0f), strokeWidth = strokeW, cap = StrokeCap.Round)
         drawLine(Color.White, Offset(0f, 0f), Offset(bracketLen, 0f), strokeWidth = strokeW, cap = StrokeCap.Round)
-        // top-right
         drawLine(Color.White, Offset(w - bracketLen, 0f), Offset(w, 0f), strokeWidth = strokeW, cap = StrokeCap.Round)
         drawLine(Color.White, Offset(w, 0f), Offset(w, bracketLen), strokeWidth = strokeW, cap = StrokeCap.Round)
-        // bottom-right
         drawLine(Color.White, Offset(w, h - bracketLen), Offset(w, h), strokeWidth = strokeW, cap = StrokeCap.Round)
         drawLine(Color.White, Offset(w, h), Offset(w - bracketLen, h), strokeWidth = strokeW, cap = StrokeCap.Round)
-        // bottom-left
         drawLine(Color.White, Offset(bracketLen, h), Offset(0f, h), strokeWidth = strokeW, cap = StrokeCap.Round)
         drawLine(Color.White, Offset(0f, h), Offset(0f, h - bracketLen), strokeWidth = strokeW, cap = StrokeCap.Round)
 
-        // Dashed leaf outline ellipse
         val dashEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)
         drawOval(
-            color = Color.White.copy(alpha = 0.5f),
+            color   = Color.White.copy(alpha = 0.5f),
             topLeft = Offset(w * 0.12f, h * 0.12f),
-            size = androidx.compose.ui.geometry.Size(w * 0.76f, h * 0.76f),
-            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = 1.5.dp.toPx(),
+            size    = androidx.compose.ui.geometry.Size(w * 0.76f, h * 0.76f),
+            style   = androidx.compose.ui.graphics.drawscope.Stroke(
+                width      = 1.5.dp.toPx(),
                 pathEffect = dashEffect
             )
         )
-        // Crosshair lines
         drawLine(
-            Color.White.copy(alpha = 0.3f),
-            Offset(w * 0.05f, h * 0.5f), Offset(w * 0.95f, h * 0.5f),
-            strokeWidth = 1.dp.toPx(), pathEffect = dashEffect
-        )
-        drawLine(
-            Color.White.copy(alpha = 0.3f),
-            Offset(w * 0.5f, h * 0.08f), Offset(w * 0.5f, h * 0.92f),
-            strokeWidth = 1.dp.toPx(), pathEffect = dashEffect
-        )
-
-        // Animated scan line
-        drawLine(
-            color = Color(0xFF4CAF50).copy(alpha = 0.7f),
-            start = Offset(w * 0.06f, h * scanPosition),
-            end = Offset(w * 0.94f, h * scanPosition),
+            color       = Color(0xFF4CAF50).copy(alpha = 0.7f),
+            start       = Offset(w * 0.06f, h * scanPosition),
+            end         = Offset(w * 0.94f, h * scanPosition),
             strokeWidth = 2.dp.toPx(),
-            cap = StrokeCap.Round
+            cap         = StrokeCap.Round
         )
     }
 }
