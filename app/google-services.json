@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "330871577103",
+    "project_id": "rubberscan-c93f5",
+    "storage_bucket": "rubberscan-c93f5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330871577103:android:f7f7b87ea9bb959990617a",
+        "android_client_info": {
+          "package_name": "com.example.rubberscan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "330871577103-5bf8bb4fmme4o120ds1l6ohg8bj5o1rt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rubberscan",
+            "certificate_hash": "c8784d5b6fb90ac1e069fe850ba81e9989a6bcf4"
+          }
+        },
+        {
+          "client_id": "330871577103-1o833fkrfg60nuvq4rjv9q1mhjaf8764.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqJwehTOGvOOVKJZfIgcWEn6Db_yBcZR4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "330871577103-1o833fkrfg60nuvq4rjv9q1mhjaf8764.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
