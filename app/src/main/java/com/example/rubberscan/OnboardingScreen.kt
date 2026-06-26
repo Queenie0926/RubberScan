@@ -253,7 +253,7 @@ fun ScanIllustration() {
             }
 
             Image(
-                painter = painterResource(R.drawable.illustration_1),
+                painter = painterResource(R.drawable.illustration_11),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth(0.99f)
@@ -290,7 +290,7 @@ fun SensorIllustration() {
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Image(
-                    painter = painterResource(id = R.drawable.illustration_2),
+                    painter = painterResource(id = R.drawable.illustration_22),
                     contentDescription = "Sensor illustration",
                     modifier = Modifier
                         .fillMaxWidth(0.99f)

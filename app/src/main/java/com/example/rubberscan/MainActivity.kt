@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController      = nav,
-                        startDestination   = "welcome",
+                        startDestination   = "onboarding",
                         modifier           = androidx.compose.ui.Modifier.padding(innerPadding),
                         enterTransition    = { slideInHorizontally(tween(280)) { it } },
                         exitTransition     = { slideOutHorizontally(tween(280)) { -it } },

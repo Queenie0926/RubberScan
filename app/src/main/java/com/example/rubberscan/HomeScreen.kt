@@ -304,6 +304,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                 }
             }
 
+
             Spacer(Modifier.height(16.dp))
 
             // ── Recent Inspections ──────────────────────────
@@ -396,14 +397,15 @@ fun AppBottomNavBar(currentRoute: String, onNavigate: (String) -> Unit) {
     }
 }
 
-// ── Sensor Status Card ──────────────────────────────────────
 @Composable
 fun SensorStatusCard(data: StatusCardData) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)  // ← fixed height, same for all cards
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -414,13 +416,17 @@ fun SensorStatusCard(data: StatusCardData) {
                         .background(data.bgColor),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(data.icon, contentDescription = null,
-                        tint = data.valueColor, modifier = Modifier.size(18.dp))
+                    Icon(
+                        data.icon, contentDescription = null,
+                        tint = data.valueColor, modifier = Modifier.size(18.dp)
+                    )
                 }
                 Spacer(Modifier.width(6.dp))
-                Text(data.label, color = TextMuted,
-                    fontSize = 11.sp, fontWeight = FontWeight.Medium,
-                    lineHeight = 13.sp)
+                Text(
+                    data.label, color = TextMuted,
+                    fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                    lineHeight = 13.sp
+                )
             }
             Spacer(Modifier.height(8.dp))
             Text(data.value, fontWeight = FontWeight.Bold,
