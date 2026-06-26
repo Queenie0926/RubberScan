@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -40,187 +41,18 @@ private val AuthFieldBg  = Color(0xFFF5F5F5)
 private val AuthHint     = Color(0xFFAAAAAA)
 private val AuthText     = Color(0xFF1C1C1C)
 
-// ── Login Screen ─────────────────────────────────────────────
+// Welcome back! Sign in to continue monitoring your rubber trees.
 @Composable
 fun LoginScreen(
-    onLogin: () -> Unit = {},
-    onSignUp: () -> Unit = {},
-    onGoogleSignIn: () -> Unit = {}
+    viewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit,
+    onSignUp: () -> Unit
 ) {
+    val context         = LocalContext.current
+    val uiState        by viewModel.loginState.collectAsState()
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe      by remember { mutableStateOf(false) }
-
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(listOf(Color(0xFFe8f5e9), Color(0xFFB2F2C2)))
-                )
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(130.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painterResource(R.drawable.app_logo),
-                            contentDescription = null,
-                            modifier = Modifier.size(130.dp)
-                        )
-                    }
-                }
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(
-                        topStart = 32.dp,
-                        topEnd = 32.dp
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 28.dp)
-                            .padding(top = 32.dp, bottom = 40.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Login",
-                            fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText
-                        )
-
-                        Spacer(Modifier.height(8.dp))
-
-                        val subtitle = buildAnnotatedString {
-                            append("Don't have an account? ")
-                            withStyle(
-                                SpanStyle(
-                                    color = Color(0xFF1B5E20),
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            ) {
-                                append("Sign Up")
-                            }
-                        }
-
-                        Text(
-                            subtitle, fontSize = 13.sp, color = AuthHint,
-                            modifier = Modifier.clickable { onSignUp() })
-
-                        Spacer(Modifier.height(28.dp))
-
-                        AuthInputField(
-                            value = email,
-                            onValueChange = { email = it },
-                            placeholder = "Enter your email address",
-                            keyboardType = KeyboardType.Email,
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Email,
-                                    null,
-                                    tint = AuthHint,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        )
-
-                        Spacer(Modifier.height(14.dp))
-
-                        AuthInputField(
-                            value = password,
-                            onValueChange = { password = it },
-                            placeholder = "Password",
-                            isPassword = true,
-                            passwordVisible = passwordVisible,
-                            onTogglePassword = { passwordVisible = !passwordVisible },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Lock,
-                                    null,
-                                    tint = AuthHint,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        )
-
-                        Spacer(Modifier.height(14.dp))
-
-                        // Remember me + Forgot password
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.clickable { rememberMe = !rememberMe }
-                            ) {
-                                Checkbox(
-                                    checked = rememberMe,
-                                    onCheckedChange = { rememberMe = it },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = Color(0xFF1B5E20),
-                                        uncheckedColor = AuthHint
-                                    ),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text("Remember Me", fontSize = 12.sp, color = AuthHint)
-                            }
-
-                            Text(
-                                "Forgot Password?",
-                                fontSize = 12.sp, color = Color(0xFF1B5E20),
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.clickable { })
-                        }
-
-                        Spacer(Modifier.height(28.dp))
-
-                        // Login button
-                        AuthPrimaryButton(label = "Login", onClick = onLogin)
-
-                        Spacer(Modifier.height(24.dp))
-
-                        AuthDivider()
-
-                        Spacer(Modifier.height(20.dp))
-
-                        GoogleButton(onClick = onGoogleSignIn)
-                    }
-                }
-            }
-        }
-    }
-
-
-// ── Sign Up Screen ────────────────────────────────────────────
-@Composable
-fun SignUpScreen(
-    onSignUp: () -> Unit = {},
-    onLogin: () -> Unit = {},
-    onGoogleSignIn: () -> Unit = {}
-) {
-    var email           by remember { mutableStateOf("") }
-    var password        by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmVisible  by remember { mutableStateOf(false) }
     var rememberMe      by remember { mutableStateOf(false) }
 
     Box(
@@ -230,9 +62,7 @@ fun SignUpScreen(
                 Brush.verticalGradient(listOf(Color(0xFFe8f5e9), Color(0xFFB2F2C2)))
             )
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -240,11 +70,7 @@ fun SignUpScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(130.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.size(130.dp), contentAlignment = Alignment.Center) {
                     Image(
                         painterResource(R.drawable.app_logo),
                         contentDescription = null,
@@ -254,13 +80,8 @@ fun SignUpScreen(
             }
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                shape = RoundedCornerShape(
-                    topStart = 32.dp,
-                    topEnd = 32.dp
-                )
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -269,42 +90,28 @@ fun SignUpScreen(
                         .padding(top = 32.dp, bottom = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        "Sign Up",
-                        fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText
-                    )
+                    Text("Login", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText)
 
                     Spacer(Modifier.height(8.dp))
 
                     val subtitle = buildAnnotatedString {
-                        append("Already have an account? ")
-                        withStyle(
-                            SpanStyle(
-                                color = Color(0xFF1B5E20),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        ) {
-                            append("Log In")
+                        append("Don't have an account? ")
+                        withStyle(SpanStyle(color = Color(0xFF1B5E20), fontWeight = FontWeight.SemiBold)) {
+                            append("Sign Up")
                         }
                     }
-                    Text(
-                        subtitle, fontSize = 13.sp, color = AuthHint,
-                        modifier = Modifier.clickable { onLogin() })
+                    Text(subtitle, fontSize = 13.sp, color = AuthHint,
+                        modifier = Modifier.clickable { onSignUp() })
 
                     Spacer(Modifier.height(28.dp))
 
                     AuthInputField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = { email = it; viewModel.clearLoginError() },
                         placeholder = "Enter your email address",
                         keyboardType = KeyboardType.Email,
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Email,
-                                null,
-                                tint = AuthHint,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Default.Email, null, tint = AuthHint, modifier = Modifier.size(18.dp))
                         }
                     )
 
@@ -312,37 +119,13 @@ fun SignUpScreen(
 
                     AuthInputField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = { password = it; viewModel.clearLoginError() },
                         placeholder = "Password",
                         isPassword = true,
                         passwordVisible = passwordVisible,
                         onTogglePassword = { passwordVisible = !passwordVisible },
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Lock,
-                                null,
-                                tint = AuthHint,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    AuthInputField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        placeholder = "Confirm Password",
-                        isPassword = true,
-                        passwordVisible = confirmVisible,
-                        onTogglePassword = { confirmVisible = !confirmVisible },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Lock,
-                                null,
-                                tint = AuthHint,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Default.Lock, null, tint = AuthHint, modifier = Modifier.size(18.dp))
                         }
                     )
 
@@ -361,8 +144,7 @@ fun SignUpScreen(
                                 checked = rememberMe,
                                 onCheckedChange = { rememberMe = it },
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFF1B5E20),
-                                    uncheckedColor = AuthHint
+                                    checkedColor = Color(0xFF1B5E20), uncheckedColor = AuthHint
                                 ),
                                 modifier = Modifier.size(20.dp)
                             )
@@ -373,12 +155,27 @@ fun SignUpScreen(
                             "Forgot Password?",
                             fontSize = 12.sp, color = Color(0xFF1B5E20),
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.clickable { })
+                            modifier = Modifier.clickable { }
+                        )
                     }
 
-                    Spacer(Modifier.height(28.dp))
+                    if (uiState.error != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = uiState.error!!,
+                            color = Color(0xFFB00020),
+                            fontSize = 13.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
-                    AuthPrimaryButton(label = "Sign Up", onClick = onSignUp)
+                    Spacer(Modifier.height(if (uiState.error != null) 12.dp else 28.dp))
+
+                    AuthPrimaryButton(
+                        label = "Login",
+                        isLoading = uiState.isLoading,
+                        onClick = { viewModel.signInWithEmail(email, password, onLoginSuccess) }
+                    )
 
                     Spacer(Modifier.height(24.dp))
 
@@ -386,14 +183,163 @@ fun SignUpScreen(
 
                     Spacer(Modifier.height(20.dp))
 
-                    GoogleButton(onClick = onGoogleSignIn)
+                    GoogleButton(
+                        isLoading = uiState.isLoading,
+                        onClick = { viewModel.signInWithGoogle(context, isSignUp = false, onLoginSuccess) }
+                    )
                 }
             }
         }
     }
 }
 
-// ── Shared components ─────────────────────────────────────────
+
+// New here? Create your account and start protecting your rubber trees.
+@Composable
+fun SignUpScreen(
+    viewModel: AuthViewModel,
+    onSignUpSuccess: () -> Unit,
+    onLogin: () -> Unit
+) {
+    val context         = LocalContext.current
+    val uiState        by viewModel.signUpState.collectAsState()
+    var name            by remember { mutableStateOf("") }
+    var email           by remember { mutableStateOf("") }
+    var password        by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible  by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color(0xFFe8f5e9), Color(0xFFB2F2C2))))
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(modifier = Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+                    Image(
+                        painterResource(R.drawable.app_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(130.dp)
+                    )
+                }
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp)
+                        .padding(top = 32.dp, bottom = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Sign Up", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText)
+
+                    Spacer(Modifier.height(8.dp))
+
+                    val subtitle = buildAnnotatedString {
+                        append("Already have an account? ")
+                        withStyle(SpanStyle(color = Color(0xFF1B5E20), fontWeight = FontWeight.SemiBold)) {
+                            append("Log In")
+                        }
+                    }
+                    Text(subtitle, fontSize = 13.sp, color = AuthHint,
+                        modifier = Modifier.clickable { onLogin() })
+
+                    Spacer(Modifier.height(28.dp))
+
+                    AuthInputField(
+                        value = name,
+                        onValueChange = { name = it; viewModel.clearSignUpError() },
+                        placeholder = "Full name",
+                        leadingIcon = {
+                            Icon(Icons.Default.Person, null, tint = AuthHint, modifier = Modifier.size(18.dp))
+                        }
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    AuthInputField(
+                        value = email,
+                        onValueChange = { email = it; viewModel.clearSignUpError() },
+                        placeholder = "Enter your email address",
+                        keyboardType = KeyboardType.Email,
+                        leadingIcon = {
+                            Icon(Icons.Default.Email, null, tint = AuthHint, modifier = Modifier.size(18.dp))
+                        }
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    AuthInputField(
+                        value = password,
+                        onValueChange = { password = it; viewModel.clearSignUpError() },
+                        placeholder = "Password",
+                        isPassword = true,
+                        passwordVisible = passwordVisible,
+                        onTogglePassword = { passwordVisible = !passwordVisible },
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, null, tint = AuthHint, modifier = Modifier.size(18.dp))
+                        }
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    AuthInputField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it; viewModel.clearSignUpError() },
+                        placeholder = "Confirm Password",
+                        isPassword = true,
+                        passwordVisible = confirmVisible,
+                        onTogglePassword = { confirmVisible = !confirmVisible },
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, null, tint = AuthHint, modifier = Modifier.size(18.dp))
+                        }
+                    )
+
+                    if (uiState.error != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = uiState.error!!,
+                            color = Color(0xFFB00020),
+                            fontSize = 13.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(Modifier.height(if (uiState.error != null) 12.dp else 28.dp))
+
+                    AuthPrimaryButton(
+                        label = "Sign Up",
+                        isLoading = uiState.isLoading,
+                        onClick = { viewModel.signUpWithEmail(name, email, password, confirmPassword, onSignUpSuccess) }
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    AuthDivider()
+
+                    Spacer(Modifier.height(20.dp))
+
+                    GoogleButton(
+                        isLoading = uiState.isLoading,
+                        onClick = { viewModel.signInWithGoogle(context, isSignUp = true, onSignUpSuccess) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// These form elements are used on both the Login and Sign Up screens.
 @Composable
 fun AuthInputField(
     value: String,
@@ -437,17 +383,21 @@ fun AuthInputField(
 }
 
 @Composable
-fun AuthPrimaryButton(label: String, onClick: () -> Unit) {
+fun AuthPrimaryButton(label: String, onClick: () -> Unit, isLoading: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(50))
-            .background(Color(0xFF1B5E20))
-            .clickable { onClick() },
+            .background(if (isLoading) Color(0xFF2E7D32).copy(alpha = 0.6f) else Color(0xFF1B5E20))
+            .clickable(enabled = !isLoading) { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(label, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        if (isLoading) {
+            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+        } else {
+            Text(label, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -464,7 +414,7 @@ fun AuthDivider() {
 }
 
 @Composable
-fun GoogleButton(onClick: () -> Unit) {
+fun GoogleButton(onClick: () -> Unit, isLoading: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -472,7 +422,7 @@ fun GoogleButton(onClick: () -> Unit) {
             .clip(RoundedCornerShape(50))
             .background(Color.White)
             .border(1.5.dp, Color(0xFFE0E0E0), RoundedCornerShape(50))
-            .clickable { onClick() },
+            .clickable(enabled = !isLoading) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

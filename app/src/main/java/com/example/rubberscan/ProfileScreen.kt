@@ -66,7 +66,9 @@ private val profileStats = listOf(
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit = {},
-    onNavigate: (String) -> Unit = {}
+    onNavigate: (String) -> Unit = {},
+    userName: String = "",
+    userEmail: String = ""
 ) {
     Column(
         modifier = Modifier
@@ -139,13 +141,21 @@ fun ProfileScreen(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("JD", color = Color.White,
-                            fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = userName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase().ifEmpty { "U" },
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Juan dela Cruz", fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp, color = Color(0xFF1C1C1C))
+                        Text(
+                            text = userName.ifBlank { "User" },
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF1C1C1C)
+                        )
                         Spacer(Modifier.height(3.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.LocationOn, contentDescription = null,

@@ -78,7 +78,7 @@ data class RecentInspection(
 
 // ── Home Screen ────────────────────────────────────────────
 @Composable
-fun HomeScreen(onNavigate: (String) -> Unit = {}) {
+fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "") {
 
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
@@ -151,8 +151,12 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}) {
                     Text("$greeting,", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(3.dp))
-                Text("Chaquella!", color = Color.White,
-                    fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (userName.isNotBlank()) "$userName!" else "Welcome!",
+                    color = Color.White,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text("📍 Marilog District Plantation",
                     color = Color(0xFFA5D6A7), fontSize = 12.sp)

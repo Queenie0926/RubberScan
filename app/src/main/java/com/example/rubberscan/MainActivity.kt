@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -12,6 +13,8 @@ import androidx.compose.material3.Scaffold
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
 import com.example.rubberscan.ui.theme.RubberScanTheme
 
@@ -20,6 +23,8 @@ private val bottomNavRoutes = setOf(
 )
 
 class MainActivity : ComponentActivity() {
+    private val authViewModel: AuthViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,6 +33,7 @@ class MainActivity : ComponentActivity() {
             RubberScanTheme {
                 val nav          = rememberNavController()
                 val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
+                val currentUser  by authViewModel.currentUser.collectAsState()
 
                 Scaffold(
                     bottomBar = {
@@ -47,22 +53,13 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController      = nav,
-                        startDestination   = "splash",
+                        startDestination   = "welcome",
                         modifier           = androidx.compose.ui.Modifier.padding(innerPadding),
                         enterTransition    = { slideInHorizontally(tween(280)) { it } },
                         exitTransition     = { slideOutHorizontally(tween(280)) { -it } },
                         popEnterTransition = { slideInHorizontally(tween(280)) { -it } },
                         popExitTransition  = { slideOutHorizontally(tween(280)) { it } }
                     ) {
-
-                        composable("splash") {
-                            SplashScreen(
-                                onComplete = { nav.navigate("welcome") {
-                                    popUpTo("splash") { inclusive = true }
-                                }}
-                            )
-                        }
-
                         composable("welcome") {
                             WelcomeScreen(
                                 onGetStarted = { nav.navigate("onboarding") },
@@ -76,25 +73,21 @@ class MainActivity : ComponentActivity() {
 
                         composable("login") {
                             LoginScreen(
-                                onLogin        = { nav.navigate("home") {
+                                viewModel      = authViewModel,
+                                onLoginSuccess = { nav.navigate("home") {
                                     popUpTo("welcome") { inclusive = true }
                                 }},
-                                onSignUp       = { nav.navigate("signup") },
-                                onGoogleSignIn = { nav.navigate("home") {
-                                    popUpTo("welcome") { inclusive = true }
-                                }}
+                                onSignUp       = { nav.navigate("signup") }
                             )
                         }
 
                         composable("signup") {
                             SignUpScreen(
-                                onSignUp       = { nav.navigate("home") {
+                                viewModel       = authViewModel,
+                                onSignUpSuccess = { nav.navigate("home") {
                                     popUpTo("welcome") { inclusive = true }
                                 }},
-                                onLogin        = { nav.navigate("login") },
-                                onGoogleSignIn = { nav.navigate("home") {
-                                    popUpTo("welcome") { inclusive = true }
-                                }}
+                                onLogin         = { nav.navigate("login") }
                             )
                         }
 
@@ -105,7 +98,10 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("home") {
-                            HomeScreen(onNavigate = { route -> nav.navigate(route) })
+                            HomeScreen(
+                                onNavigate = { route -> nav.navigate(route) },
+                                userName = currentUser?.name ?: ""
+                            )
                         }
 
                         composable("scan") {
@@ -175,7 +171,9 @@ class MainActivity : ComponentActivity() {
                         composable("profile") {
                             ProfileScreen(
                                 onBack     = { nav.popBackStack() },
-                                onNavigate = { route -> nav.navigate(route) }
+                                onNavigate = { route -> nav.navigate(route) },
+                                userName   = currentUser?.name ?: "",
+                                userEmail  = currentUser?.email ?: ""
                             )
                         }
                     }
