@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController      = nav,
-                        startDestination   = "splash",
+                        startDestination   = "welcome",
                         modifier           = androidx.compose.ui.Modifier.padding(innerPadding),
                         enterTransition    = { slideInHorizontally(tween(280)) { it } },
                         exitTransition     = { slideOutHorizontally(tween(280)) { -it } },
@@ -55,13 +55,6 @@ class MainActivity : ComponentActivity() {
                         popExitTransition  = { slideOutHorizontally(tween(280)) { it } }
                     ) {
 
-                        composable("splash") {
-                            SplashScreen(
-                                onComplete = { nav.navigate("welcome") {
-                                    popUpTo("splash") { inclusive = true }
-                                }}
-                            )
-                        }
 
                         composable("welcome") {
                             WelcomeScreen(
