@@ -46,14 +46,9 @@ data class ProfileStat(
 )
 
 // ── Sample data ────────────────────────────────────────────
-private val menuSection1 = listOf(
-    ProfileMenuItem(Icons.Default.History, Color(0xFF0D47A1), "Saved Inspections", Color(0xFFE3F2FD), "24", "history"),
-    ProfileMenuItem(Icons.Default.Bluetooth, Color(0xFF00695C), "Sensor Settings", Color(0xFFE0F2F1), null, "ble-pairing")
-)
 
-private val menuSection2 = listOf(
+private val menuSection1 = listOf(
     ProfileMenuItem(Icons.Default.Settings, Color(0xFF546E7A), "Account Settings", Color(0xFFECEFF1), null, "settings"),
-    ProfileMenuItem(Icons.Default.MenuBook, OrangeDark, "Disease Guide", OrangeLight, null, "disease-guide")
 )
 
 private val profileStats = listOf(
@@ -67,6 +62,7 @@ private val profileStats = listOf(
 fun ProfileScreen(
     onBack: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
+    onSignOut: () -> Unit = {},
     userName: String = "",
     userEmail: String = ""
 ) {
@@ -215,7 +211,6 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MenuSectionCard(items = menuSection1, onNavigate = onNavigate)
-            MenuSectionCard(items = menuSection2, onNavigate = onNavigate)
 
             // About card
             Card(
@@ -247,7 +242,7 @@ fun ProfileScreen(
 
             // Sign Out button
             OutlinedButton(
-                onClick = { onNavigate("login") },
+                onClick = { onSignOut() },
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFCDD2)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350)),
