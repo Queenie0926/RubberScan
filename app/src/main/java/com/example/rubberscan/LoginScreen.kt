@@ -36,8 +36,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val AuthTeal     = Color(0xFF00BCD4)
-private val AuthTealDark = Color(0xFF0097A7)
 private val AuthFieldBg  = Color(0xFFF5F5F5)
 private val AuthHint     = Color(0xFFAAAAAA)
 private val AuthText     = Color(0xFF1C1C1C)
@@ -54,115 +52,162 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe      by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // ── Illustration header ──────────────────────────────
+
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(210.dp)
+                .fillMaxSize()
                 .background(
-                    Brush.verticalGradient(listOf(Color(0xFFE0F7FA), Color(0xFFB2EBF2)))
-                ),
-            contentAlignment = Alignment.Center
+                    Brush.verticalGradient(listOf(Color(0xFFe8f5e9), Color(0xFFB2F2C2)))
+                )
         ) {
-            AuthLeafIllustration()
-        }
-
-        // ── Form ─────────────────────────────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp)
-                .padding(top = 32.dp, bottom = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Login",
-                fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText)
-
-            Spacer(Modifier.height(8.dp))
-
-            val subtitle = buildAnnotatedString {
-                append("Don't Have An Account? ")
-                withStyle(SpanStyle(color = AuthTeal, fontWeight = FontWeight.SemiBold)) {
-                    append("Sign Up")
-                }
-            }
-            Text(subtitle, fontSize = 13.sp, color = AuthHint,
-                modifier = Modifier.clickable { onSignUp() })
-
-            Spacer(Modifier.height(28.dp))
-
-            AuthInputField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "Enter your email address",
-                keyboardType = KeyboardType.Email,
-                leadingIcon = { Icon(Icons.Default.Email, null, tint = AuthHint, modifier = Modifier.size(18.dp)) }
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            AuthInputField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "Password",
-                isPassword = true,
-                passwordVisible = passwordVisible,
-                onTogglePassword = { passwordVisible = !passwordVisible },
-                leadingIcon = { Icon(Icons.Default.Lock, null, tint = AuthHint, modifier = Modifier.size(18.dp)) }
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            // Remember me + Forgot password
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { rememberMe = !rememberMe }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor   = AuthTeal,
-                            uncheckedColor = AuthHint
-                        ),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text("Remember Me", fontSize = 12.sp, color = AuthHint)
+                    Box(
+                        modifier = Modifier
+                            .size(130.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painterResource(R.drawable.app_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(130.dp)
+                        )
+                    }
                 }
-                Text("Forgot Password?",
-                    fontSize = 12.sp, color = AuthTeal,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { })
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(
+                        topStart = 32.dp,
+                        topEnd = 32.dp
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 28.dp)
+                            .padding(top = 32.dp, bottom = 40.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Login",
+                            fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        val subtitle = buildAnnotatedString {
+                            append("Don't have an account? ")
+                            withStyle(
+                                SpanStyle(
+                                    color = Color(0xFF1B5E20),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            ) {
+                                append("Sign Up")
+                            }
+                        }
+
+                        Text(
+                            subtitle, fontSize = 13.sp, color = AuthHint,
+                            modifier = Modifier.clickable { onSignUp() })
+
+                        Spacer(Modifier.height(28.dp))
+
+                        AuthInputField(
+                            value = email,
+                            onValueChange = { email = it },
+                            placeholder = "Enter your email address",
+                            keyboardType = KeyboardType.Email,
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Email,
+                                    null,
+                                    tint = AuthHint,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+
+                        Spacer(Modifier.height(14.dp))
+
+                        AuthInputField(
+                            value = password,
+                            onValueChange = { password = it },
+                            placeholder = "Password",
+                            isPassword = true,
+                            passwordVisible = passwordVisible,
+                            onTogglePassword = { passwordVisible = !passwordVisible },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Lock,
+                                    null,
+                                    tint = AuthHint,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+
+                        Spacer(Modifier.height(14.dp))
+
+                        // Remember me + Forgot password
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { rememberMe = !rememberMe }
+                            ) {
+                                Checkbox(
+                                    checked = rememberMe,
+                                    onCheckedChange = { rememberMe = it },
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = Color(0xFF1B5E20),
+                                        uncheckedColor = AuthHint
+                                    ),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("Remember Me", fontSize = 12.sp, color = AuthHint)
+                            }
+
+                            Text(
+                                "Forgot Password?",
+                                fontSize = 12.sp, color = Color(0xFF1B5E20),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable { })
+                        }
+
+                        Spacer(Modifier.height(28.dp))
+
+                        // Login button
+                        AuthPrimaryButton(label = "Login", onClick = onLogin)
+
+                        Spacer(Modifier.height(24.dp))
+
+                        AuthDivider()
+
+                        Spacer(Modifier.height(20.dp))
+
+                        GoogleButton(onClick = onGoogleSignIn)
+                    }
+                }
             }
-
-            Spacer(Modifier.height(28.dp))
-
-            // Login button
-            AuthPrimaryButton(label = "Login", onClick = onLogin)
-
-            Spacer(Modifier.height(24.dp))
-
-            AuthDivider()
-
-            Spacer(Modifier.height(20.dp))
-
-            GoogleButton(onClick = onGoogleSignIn)
         }
-
     }
-}
+
 
 // ── Sign Up Screen ────────────────────────────────────────────
 @Composable
@@ -178,127 +223,177 @@ fun SignUpScreen(
     var confirmVisible  by remember { mutableStateOf(false) }
     var rememberMe      by remember { mutableStateOf(false) }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFFe8f5e9), Color(0xFFB2F2C2)))
+            )
     ) {
-        // ── Illustration header ──────────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(210.dp)
-                .background(
-                    Brush.verticalGradient(listOf(Color(0xFFE0F7FA), Color(0xFFB2EBF2)))
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            AuthLeafIllustration()
-        }
-
-        // ── Form ─────────────────────────────────────────────
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp)
-                .padding(top = 32.dp, bottom = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text("Sign Up",
-                fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText)
-
-            Spacer(Modifier.height(8.dp))
-
-            val subtitle = buildAnnotatedString {
-                append("Already Have An Account? ")
-                withStyle(SpanStyle(color = AuthTeal, fontWeight = FontWeight.SemiBold)) {
-                    append("Log In")
-                }
-            }
-            Text(subtitle, fontSize = 13.sp, color = AuthHint,
-                modifier = Modifier.clickable { onLogin() })
-
-            Spacer(Modifier.height(28.dp))
-
-            AuthInputField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "Enter your email address",
-                keyboardType = KeyboardType.Email,
-                leadingIcon = { Icon(Icons.Default.Email, null, tint = AuthHint, modifier = Modifier.size(18.dp)) }
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            AuthInputField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "Password",
-                isPassword = true,
-                passwordVisible = passwordVisible,
-                onTogglePassword = { passwordVisible = !passwordVisible },
-                leadingIcon = { Icon(Icons.Default.Lock, null, tint = AuthHint, modifier = Modifier.size(18.dp)) }
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            AuthInputField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                placeholder = "Confirm Password",
-                isPassword = true,
-                passwordVisible = confirmVisible,
-                onTogglePassword = { confirmVisible = !confirmVisible },
-                leadingIcon = { Icon(Icons.Default.Lock, null, tint = AuthHint, modifier = Modifier.size(18.dp)) }
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { rememberMe = !rememberMe }
+                Box(
+                    modifier = Modifier
+                        .size(130.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor   = AuthTeal,
-                            uncheckedColor = AuthHint
-                        ),
-                        modifier = Modifier.size(20.dp)
+                    Image(
+                        painterResource(R.drawable.app_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(130.dp)
                     )
-                    Spacer(Modifier.width(6.dp))
-                    Text("Remember Me", fontSize = 12.sp, color = AuthHint)
                 }
-                Text("Forgot Password?",
-                    fontSize = 12.sp, color = AuthTeal,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { })
             }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                shape = RoundedCornerShape(
+                    topStart = 32.dp,
+                    topEnd = 32.dp
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp)
+                        .padding(top = 32.dp, bottom = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Sign Up",
+                        fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText
+                    )
 
-            Spacer(Modifier.height(28.dp))
+                    Spacer(Modifier.height(8.dp))
 
-            AuthPrimaryButton(label = "Sign Up", onClick = onSignUp)
+                    val subtitle = buildAnnotatedString {
+                        append("Already have an account? ")
+                        withStyle(
+                            SpanStyle(
+                                color = Color(0xFF1B5E20),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        ) {
+                            append("Log In")
+                        }
+                    }
+                    Text(
+                        subtitle, fontSize = 13.sp, color = AuthHint,
+                        modifier = Modifier.clickable { onLogin() })
 
-            Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(28.dp))
 
-            AuthDivider()
+                    AuthInputField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = "Enter your email address",
+                        keyboardType = KeyboardType.Email,
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Email,
+                                null,
+                                tint = AuthHint,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
 
-            Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(14.dp))
 
-            GoogleButton(onClick = onGoogleSignIn)
+                    AuthInputField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = "Password",
+                        isPassword = true,
+                        passwordVisible = passwordVisible,
+                        onTogglePassword = { passwordVisible = !passwordVisible },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Lock,
+                                null,
+                                tint = AuthHint,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    AuthInputField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        placeholder = "Confirm Password",
+                        isPassword = true,
+                        passwordVisible = confirmVisible,
+                        onTogglePassword = { confirmVisible = !confirmVisible },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Lock,
+                                null,
+                                tint = AuthHint,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { rememberMe = !rememberMe }
+                        ) {
+                            Checkbox(
+                                checked = rememberMe,
+                                onCheckedChange = { rememberMe = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFF1B5E20),
+                                    uncheckedColor = AuthHint
+                                ),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Remember Me", fontSize = 12.sp, color = AuthHint)
+                        }
+                        Text(
+                            "Forgot Password?",
+                            fontSize = 12.sp, color = Color(0xFF1B5E20),
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { })
+                    }
+
+                    Spacer(Modifier.height(28.dp))
+
+                    AuthPrimaryButton(label = "Sign Up", onClick = onSignUp)
+
+                    Spacer(Modifier.height(24.dp))
+
+                    AuthDivider()
+
+                    Spacer(Modifier.height(20.dp))
+
+                    GoogleButton(onClick = onGoogleSignIn)
+                }
+            }
         }
     }
 }
 
 // ── Shared components ─────────────────────────────────────────
-
 @Composable
 fun AuthInputField(
     value: String,
@@ -332,8 +427,8 @@ fun AuthInputField(
             unfocusedContainerColor = AuthFieldBg,
             focusedContainerColor   = AuthFieldBg,
             unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor   = AuthTeal,
-            cursorColor             = AuthTeal
+            focusedIndicatorColor   = Color(0xFF1B5E20),
+            cursorColor             = Color(0xFF1B5E20)
         ),
         textStyle = TextStyle(fontSize = 14.sp, color = AuthText),
         shape = RoundedCornerShape(14.dp),
@@ -348,7 +443,7 @@ fun AuthPrimaryButton(label: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(50))
-            .background(Brush.horizontalGradient(listOf(AuthTeal, AuthTealDark)))
+            .background(Color(0xFF1B5E20))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {

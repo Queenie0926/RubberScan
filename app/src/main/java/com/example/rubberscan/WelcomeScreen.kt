@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 
@@ -32,13 +33,13 @@ fun WelcomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFe8f5e9))
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFFe8f5e9), Color(0xFFB2F2C2)))
+            )
     ) {
-
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -46,20 +47,17 @@ fun WelcomeScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-
-
-                    Box(
-                        modifier = Modifier
-                            .size(110.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painterResource(R.drawable.app_logo),
-                            contentDescription = null,
-                            modifier = Modifier.size(110.dp)
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .size(110.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painterResource(R.drawable.app_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(110.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
