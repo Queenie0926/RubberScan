@@ -66,9 +66,33 @@ class MainActivity : ComponentActivity() {
                         composable("welcome") {
                             WelcomeScreen(
                                 onGetStarted = { nav.navigate("onboarding") },
-                                onLogin      = { nav.navigate("home") },
-                                onRegister   = { nav.navigate("home") },
+                                onLogin      = { nav.navigate("login") },
+                                onRegister   = { nav.navigate("signup") },
                                 onGuest      = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }}
+                            )
+                        }
+
+                        composable("login") {
+                            LoginScreen(
+                                onLogin        = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }},
+                                onSignUp       = { nav.navigate("signup") },
+                                onGoogleSignIn = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }}
+                            )
+                        }
+
+                        composable("signup") {
+                            SignUpScreen(
+                                onSignUp       = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }},
+                                onLogin        = { nav.navigate("login") },
+                                onGoogleSignIn = { nav.navigate("home") {
                                     popUpTo("welcome") { inclusive = true }
                                 }}
                             )
@@ -76,9 +100,7 @@ class MainActivity : ComponentActivity() {
 
                         composable("onboarding") {
                             OnboardingScreen(
-                                onComplete = { nav.navigate("home") {
-                                    popUpTo("welcome") { inclusive = true }
-                                }}
+                                onComplete = { nav.navigate("signup") }
                             )
                         }
 
