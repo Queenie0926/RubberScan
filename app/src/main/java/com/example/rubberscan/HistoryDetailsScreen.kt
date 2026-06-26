@@ -44,7 +44,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(DetailGreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 24.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

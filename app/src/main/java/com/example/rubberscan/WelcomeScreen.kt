@@ -17,18 +17,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+
 @Composable
 fun WelcomeScreen(
     onGetStarted: () -> Unit,
-    onLogin: () -> Unit,
-    onRegister: () -> Unit,
+    onLogin: () -> Unit = {},
+    onRegister: () -> Unit = {},
     onGuest: () -> Unit
 ) {
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1B5E20))
+            .background(Color(0xFFe8f5e9))
     ) {
 
         Column(
@@ -43,40 +47,44 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White.copy(alpha = 0.15f)
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
+
 
                     Box(
                         modifier = Modifier
-                            .size(96.dp),
+                            .size(110.dp),
                         contentAlignment = Alignment.Center
                     ) {
-
-                        Text(
-                            text = "🌳",
-                            fontSize = 42.sp
+                        Image(
+                            painterResource(R.drawable.app_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(110.dp)
                         )
                     }
-                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Text(
-                    text = "BantayGoma",
-                    color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Rubber",
+                        color = Color(0xFF1B5E20),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = "Scan",
+                        color = Color(0XFF464040),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+
 
                 Text(
                     text = "Para sa mga mag-uuma,\nPara sa ugma nga mabungahon",
-                    color = Color(0xFFA5D6A7),
+                    color = Color.Black,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
                     modifier = Modifier
@@ -90,6 +98,9 @@ fun WelcomeScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
                 shape = RoundedCornerShape(
                     topStart = 32.dp,
                     topEnd = 32.dp
@@ -111,62 +122,6 @@ fun WelcomeScreen(
                     ) {
 
                         Text("Get Started")
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row {
-                        OutlinedButton(
-                            onClick = onLogin,
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFF2E7D32)
-                            ),
-                            border = BorderStroke(
-                                1.dp,
-                                Color(0xFF2E7D32)
-                            )
-                        ) {
-
-                            Icon(
-                                Icons.Outlined.Login,
-                                contentDescription = null
-                            )
-
-                            Spacer(
-                                modifier = Modifier.width(6.dp)
-                            )
-
-                            Text("Login")
-                        }
-
-                        Spacer(
-                            modifier = Modifier.width(8.dp)
-                        )
-
-                        OutlinedButton(
-                            onClick = onRegister,
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFF1565C0)
-                            ),
-                            border = BorderStroke(
-                                1.dp,
-                                Color(0xFF1565C0)
-                            )
-                        ) {
-
-                            Icon(
-                                Icons.Outlined.PersonAdd,
-                                contentDescription = null
-                            )
-
-                            Spacer(
-                                modifier = Modifier.width(6.dp)
-                            )
-
-                            Text("Register")
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))

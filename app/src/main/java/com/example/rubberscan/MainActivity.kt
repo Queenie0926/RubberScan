@@ -4,17 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.rubberscan.ui.theme.RubberScanTheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.rubberscan.SplashScreen
-import com.example.rubberscan.WelcomeScreen
-import com.example.rubberscan.navigation.MainScreen
+import com.example.rubberscan.ui.theme.RubberScanTheme
+
+private val bottomNavRoutes = setOf(
+    "home", "scan", "history", "disease-guide", "profile", "ble-pairing"
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,97 +25,159 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-
             RubberScanTheme {
-                val navController = rememberNavController()
+                val nav          = rememberNavController()
+                val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
 
-                NavHost(
-                    navController = navController,
-                    startDestination = "splash"
-
-                ) {
-                    composable("splash") {
-                        SplashScreen(
-                            onComplete = {
-                                navController.navigate("onboarding") {
-                                    popUpTo("splash") {
-                                        inclusive = true
+                Scaffold(
+                    bottomBar = {
+                        if (currentRoute in bottomNavRoutes) {
+                            AppBottomNavBar(
+                                currentRoute = currentRoute ?: "home",
+                                onNavigate   = { route ->
+                                    nav.navigate(route) {
+                                        popUpTo("home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState    = true
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
+                ) { innerPadding ->
+                    NavHost(
+                        navController      = nav,
+                        startDestination   = "splash",
+                        modifier           = androidx.compose.ui.Modifier.padding(innerPadding),
+                        enterTransition    = { slideInHorizontally(tween(280)) { it } },
+                        exitTransition     = { slideOutHorizontally(tween(280)) { -it } },
+                        popEnterTransition = { slideInHorizontally(tween(280)) { -it } },
+                        popExitTransition  = { slideOutHorizontally(tween(280)) { it } }
+                    ) {
 
-                    composable("onboarding") {
-                        OnboardingScreen(
-                            onComplete = {
-                                navController.navigate("welcome") {
-                                    popUpTo("onboarding") {
-                                        inclusive = true
-                                    }
-                                }
-                            }
-                        )
-                    }
+                        composable("splash") {
+                            SplashScreen(
+                                onComplete = { nav.navigate("welcome") {
+                                    popUpTo("splash") { inclusive = true }
+                                }}
+                            )
+                        }
 
-                    composable("welcome") {
-                        WelcomeScreen(
-                            onGetStarted = {
-                                navController.navigate("main")
-                            },
+                        composable("welcome") {
+                            WelcomeScreen(
+                                onGetStarted = { nav.navigate("onboarding") },
+                                onLogin      = { nav.navigate("login") },
+                                onRegister   = { nav.navigate("signup") },
+                                onGuest      = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }}
+                            )
+                        }
 
-                            onLogin = {
-                                navController.navigate("login")
-                            },
+                        composable("login") {
+                            LoginScreen(
+                                onLogin        = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }},
+                                onSignUp       = { nav.navigate("signup") },
+                                onGoogleSignIn = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }}
+                            )
+                        }
 
-                            onRegister = {
-                                navController.navigate("register")
-                            },
+                        composable("signup") {
+                            SignUpScreen(
+                                onSignUp       = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }},
+                                onLogin        = { nav.navigate("login") },
+                                onGoogleSignIn = { nav.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }}
+                            )
+                        }
 
-                            onGuest = {
-                                navController.navigate("main")
-                            }
-                        )
-                    }
+                        composable("onboarding") {
+                            OnboardingScreen(
+                                onComplete = { nav.navigate("signup") }
+                            )
+                        }
 
-                    composable("main") {
-                        MainScreen()
-                    }
+                        composable("home") {
+                            HomeScreen(onNavigate = { route -> nav.navigate(route) })
+                        }
 
+                        composable("scan") {
+                            ScanScreen(
+                                onBack    = { nav.popBackStack() },
+                                onCapture = { nav.navigate("processing") }
+                            )
+                        }
 
-                    composable("home") {
-                        HomeScreen(
-                            onNavigate = { route ->
-                                navController.navigate(route)
-                            }
-                        )
-                    }
+                        composable("processing") {
+                            ProcessingScreen(
+                                onComplete = { nav.navigate("result") {
+                                    popUpTo("processing") { inclusive = true }
+                                }}
+                            )
+                        }
 
-                    composable("ble-pairing") {
-                        BLEPairingScreen(
-                            onBack = { navController.popBackStack() }
-                        )
-                    }
+                        composable("result") {
+                            ResultScreen(
+                                onBack     = { nav.popBackStack() },
+                                onNavigate = { route -> nav.navigate(route) }
+                            )
+                        }
 
-                    composable("history") {
-                        HistoryScreen(
-                            onBack = { navController.popBackStack() },
-                            onHistoryDetail = {
-                                navController.navigate("history-detail")
-                            }
-                        )
-                    }
+                        composable("severity") {
+                            SeverityScreen(onBack = { nav.popBackStack() })
+                        }
 
-                    composable("history-detail") {
-                        HistoryDetailScreen(
-                            onBack = { navController.popBackStack() }
-                        )
-                    }
+                        composable("environmental-risk") {
+                            EnvironmentalRiskScreen(onBack = { nav.popBackStack() })
+                        }
 
-                    composable("disease") {
-                        DiseaseGuideScreen(
-                            onBack = { navController.popBackStack() }
-                        )
+                        composable("recommendation") {
+                            RecommendationScreen(onBack = { nav.popBackStack() })
+                        }
+
+                        composable("early-warning") {
+                            EarlyWarningScreen(onBack = { nav.popBackStack() })
+                        }
+
+                        composable("settings") {
+                            SettingsScreen(
+                                onBack     = { nav.popBackStack() },
+                                onNavigate = { route -> nav.navigate(route) }
+                            )
+                        }
+
+                        composable("history") {
+                            HistoryScreen(
+                                onBack          = { nav.popBackStack() },
+                                onHistoryDetail = { nav.navigate("history-detail") }
+                            )
+                        }
+
+                        composable("history-detail") {
+                            HistoryDetailScreen(onBack = { nav.popBackStack() })
+                        }
+
+                        composable("disease-guide") {
+                            DiseaseGuideScreen(onBack = { nav.popBackStack() })
+                        }
+
+                        composable("ble-pairing") {
+                            BLEPairingScreen(onBack = { nav.popBackStack() })
+                        }
+
+                        composable("profile") {
+                            ProfileScreen(
+                                onBack     = { nav.popBackStack() },
+                                onNavigate = { route -> nav.navigate(route) }
+                            )
+                        }
                     }
                 }
             }

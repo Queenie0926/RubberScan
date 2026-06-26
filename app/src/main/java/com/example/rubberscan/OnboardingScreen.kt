@@ -85,7 +85,7 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
 
         // ── Skip ────────────────────────────────────────────
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 25.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 20.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Text(
@@ -127,6 +127,7 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(300.dp)
                 .padding(horizontal = 32.dp, vertical = 32.dp)
         ) {
             AnimatedContent(

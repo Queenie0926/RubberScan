@@ -49,7 +49,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(SettingsGreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 24.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
