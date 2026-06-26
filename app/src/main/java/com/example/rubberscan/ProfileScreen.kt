@@ -26,6 +26,8 @@ private val ProfileGreenDark = Color(0xFF1B5E20)
 private val ProfilePageBg    = Color(0xFFF1F8F1)
 private val ProfileCardBg    = Color(0xFFFFFFFF)
 private val ProfileTextMuted = Color(0xFF9CA3AF)
+private val OrangeDark  = Color(0xFFE65100)
+private val OrangeLight = Color(0xFFFFF3E0)
 
 // ── Data models ────────────────────────────────────────────
 data class ProfileMenuItem(
@@ -51,7 +53,7 @@ private val menuSection1 = listOf(
 
 private val menuSection2 = listOf(
     ProfileMenuItem(Icons.Default.Settings, Color(0xFF546E7A), "Account Settings", Color(0xFFECEFF1), null, "settings"),
-    ProfileMenuItem(Icons.Default.MenuBook, Color(0xFF6A1B9A), "Disease Guide", Color(0xFFF3E5F5), null, "disease-guide")
+    ProfileMenuItem(Icons.Default.MenuBook, OrangeDark, "Disease Guide", OrangeLight, null, "disease-guide")
 )
 
 private val profileStats = listOf(
@@ -235,7 +237,7 @@ fun ProfileScreen(
 
             // Sign Out button
             OutlinedButton(
-                onClick = { },
+                onClick = { onNavigate("login") },
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFCDD2)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350)),
