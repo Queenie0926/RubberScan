@@ -94,7 +94,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         if (password != confirmPassword) {
-            _signUpState.value = AuthUiState(error = "Passwords do not match.")
+            _signUpState.value = AuthUiState(error = "Password do not match.")
             return
         }
         if (password.length < 6) {

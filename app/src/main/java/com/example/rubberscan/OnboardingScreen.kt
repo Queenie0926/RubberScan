@@ -35,7 +35,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.draw.rotate
-
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 // ── Data model ─────────────────────────────────────────────
 data class OnboardPage(
     val title: String,
@@ -91,7 +93,7 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
             Text(
                 "Skip",
                 color = Color(0xFF000000),
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
@@ -202,85 +204,79 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
 // ── Illustration 1: Scan ─────────────────────────────────────
 @Composable
 fun ScanIllustration() {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val scale = size.width / 220f
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val scale = size.width / 220f
 
-        // Phone outline
-        drawRoundRect(
-            color = Color.White,
-            topLeft = Offset(60f * scale, 15f * scale),
-            size = Size(100f * scale, 170f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(16f * scale),
-            style = Stroke(width = 2f * scale)
-        )
-        // Viewfinder
-        drawRoundRect(
-            color = Color(0xFFE8F5E9),
-            topLeft = Offset(72f * scale, 35f * scale),
-            size = Size(76f * scale, 100f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f * scale)
-        )
-        // Leaf
-        rotate(-15f, pivot = Offset(110f * scale, 82f * scale)) {
-            drawOval(
-                color = Color(0xFF4CAF50),
-                topLeft = Offset(82f * scale, 64f * scale),
-                size = Size(56f * scale, 36f * scale)
+                // Phone outline
+                drawRoundRect(
+                    color = Color.White,
+                    topLeft = Offset(60f * scale, 15f * scale),
+                    size = Size(100f * scale, 170f * scale),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(16f * scale),
+                    style = Stroke(width = 2f * scale)
+                )
+                // Viewfinder
+                drawRoundRect(
+                    color = Color(0xFFE8F5E9),
+                    topLeft = Offset(72f * scale, 35f * scale),
+                    size = Size(76f * scale, 100f * scale),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f * scale)
+                )
+                // Corner brackets
+                val bracketColor = Color(0xFF1B5E20)
+                val bw = 2.5f * scale
+                // top-left
+                drawLine(bracketColor, Offset(75f * scale, 38f * scale), Offset(75f * scale, 48f * scale), bw, StrokeCap.Round)
+                drawLine(bracketColor, Offset(75f * scale, 38f * scale), Offset(85f * scale, 38f * scale), bw, StrokeCap.Round)
+                // top-right
+                drawLine(bracketColor, Offset(145f * scale, 38f * scale), Offset(145f * scale, 48f * scale), bw, StrokeCap.Round)
+                drawLine(bracketColor, Offset(145f * scale, 38f * scale), Offset(135f * scale, 38f * scale), bw, StrokeCap.Round)
+                // bottom-left
+                drawLine(bracketColor, Offset(75f * scale, 132f * scale), Offset(75f * scale, 122f * scale), bw, StrokeCap.Round)
+                drawLine(bracketColor, Offset(75f * scale, 132f * scale), Offset(85f * scale, 132f * scale), bw, StrokeCap.Round)
+                // bottom-right
+                drawLine(bracketColor, Offset(145f * scale, 132f * scale), Offset(145f * scale, 122f * scale), bw, StrokeCap.Round)
+                drawLine(bracketColor, Offset(145f * scale, 132f * scale), Offset(135f * scale, 132f * scale), bw, StrokeCap.Round)
+
+                // Capture button
+                drawCircle(Color(0xFF1B5E20), radius = 12f * scale, center = Offset(110f * scale, 158f * scale))
+                drawCircle(Color.White, radius = 8f * scale, center = Offset(110f * scale, 158f * scale))
+            }
+
+            Image(
+                painter = painterResource(R.drawable.illustration_11),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth(0.99f)
+                    .aspectRatio(1f)
+                    .align(Alignment.TopCenter)
+                    .offset(x = 0.dp, y = (-20).dp)  // tweak y to move up/down, x to move left/right
+                    .rotate(-15f)
             )
         }
-        drawLine(Color(0xFF2E7D32), Offset(110f * scale, 65f * scale), Offset(110f * scale, 100f * scale), strokeWidth = 1.5f * scale)
-        // Corner brackets
-        val bracketColor = Color(0xFF1B5E20)
-        val bw = 2.5f * scale
-        // top-left
-        drawLine(bracketColor, Offset(75f * scale, 38f * scale), Offset(75f * scale, 48f * scale), bw, StrokeCap.Round)
-        drawLine(bracketColor, Offset(75f * scale, 38f * scale), Offset(85f * scale, 38f * scale), bw, StrokeCap.Round)
-        // top-right
-        drawLine(bracketColor, Offset(145f * scale, 38f * scale), Offset(145f * scale, 48f * scale), bw, StrokeCap.Round)
-        drawLine(bracketColor, Offset(145f * scale, 38f * scale), Offset(135f * scale, 38f * scale), bw, StrokeCap.Round)
-        // bottom-left
-        drawLine(bracketColor, Offset(75f * scale, 132f * scale), Offset(75f * scale, 122f * scale), bw, StrokeCap.Round)
-        drawLine(bracketColor, Offset(75f * scale, 132f * scale), Offset(85f * scale, 132f * scale), bw, StrokeCap.Round)
-        // bottom-right
-        drawLine(bracketColor, Offset(145f * scale, 132f * scale), Offset(145f * scale, 122f * scale), bw, StrokeCap.Round)
-        drawLine(bracketColor, Offset(145f * scale, 132f * scale), Offset(135f * scale, 132f * scale), bw, StrokeCap.Round)
-        // Scan line
-        drawLine(
-            color = Color(0xFF4CAF50).copy(alpha = 0.8f),
-            start = Offset(72f * scale, 82f * scale),
-            end = Offset(148f * scale, 82f * scale),
-            strokeWidth = 1.5f * scale
-        )
-        // Capture button
-        drawCircle(Color(0xFF1B5E20), radius = 12f * scale, center = Offset(110f * scale, 158f * scale))
-        drawCircle(Color.White, radius = 8f * scale, center = Offset(110f * scale, 158f * scale))
+
+        Card(
+            modifier = Modifier
+                .size(width = 100.dp, height = 120.dp)
+                .offset(y = 12.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(2.dp, Color(0xFF90CAF9))
+        ) { }
     }
 }
 
 // ── Illustration 2: Sensor ───────────────────────────────────
 
-@Composable
-fun Leaf(
-    modifier: Modifier = Modifier,
-    color: Color = Color(0xFF4CAF50)
-) {
-    Canvas(modifier = modifier) {
-
-        // Leaf body
-        drawOval(
-            color = color,
-            size = Size(size.width, size.height)
-        )
-
-        // Center vein
-        drawLine(
-            color = Color(0xFF2E7D32),
-            start = Offset(size.width / 2, size.height * 0.15f),
-            end = Offset(size.width / 2, size.height * 0.85f),
-            strokeWidth = 3f
-        )
-    }
-}
 @Composable
 fun SensorIllustration() {
     Box(
@@ -288,208 +284,102 @@ fun SensorIllustration() {
         contentAlignment = Alignment.Center
     ) {
 
-        // Left Leaf
-        Leaf(
-            modifier = Modifier
-                .offset(x = (-75).dp, y = 5.dp)
-                .size(width = 45.dp, height = 80.dp)
-                .rotate(-25f),
-            color = Color(0xFF4CAF50)
-        )
-
-        // Right Leaf
-        Leaf(
-            modifier = Modifier
-                .offset(x = 75.dp, y = 5.dp)
-                .size(width = 38.dp, height = 70.dp)
-                .rotate(20f),
-            color = Color(0xFF66BB6A)
-        )
-        Box(
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
         ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Image(
+                    painter = painterResource(id = R.drawable.illustration_22),
+                    contentDescription = "Sensor illustration",
+                    modifier = Modifier
+                        .fillMaxWidth(0.99f)
+                        .aspectRatio(1f)
+                        .align(Alignment.TopCenter)
+                        .offset(y = 8.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
 
-            // Main Card
             Card(
                 modifier = Modifier
-                    .size(width = 130.dp, height = 180.dp)
+                    .size(width = 100.dp, height = 120.dp)
                     .offset(y = 12.dp),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                border = BorderStroke(
-                    2.dp,
-                    Color(0xFF90CAF9)
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    Spacer(Modifier.height(24.dp))
-
-                    // Temperature Card
-                    // ...
-                }
-            }
-
-            // Floating WiFi Icon
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-10).dp),
-                shape = CircleShape,
-                color = Color.White,
-                shadowElevation = 6.dp
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Wifi,
-                    contentDescription = null,
-                    tint = Color(0xFF66BB6A),
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .size(30.dp)
-                )
-            }
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(2.dp, Color(0xFF90CAF9))
+            ) { }
+         }
         }
+    }
 
-                Spacer(Modifier.height(8.dp))
-        Column(
-            modifier = Modifier.offset(y = 25.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Card(
-                modifier = Modifier
-                    .width(95.dp)
-                    .height(75.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFE3F2FD)
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "28°",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1565C0)
-                    )
-
-                    Text(
-                        text = "TEMPERATURE",
-                        fontSize = 8.sp,
-                        color = Color(0xFF1976D2)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LinearProgressIndicator(
-                progress = { 0.68f },
-                modifier = Modifier
-                    .width(72.dp)
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(50)),
-                color = Color(0xFF2196F3),
-                trackColor = Color(0xFFD6EAF8)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Humidity: 68%",
-                fontSize = 10.sp,
-                color = Color(0xFF546E7A)
-            )
-        }
-        }
-            }
 
 
 // ── Illustration 3: Alert ────────────────────────────────────
 @Composable
 fun AlertIllustration() {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val scale = size.width / 220f
-
-        // Bell body (simplified path using arcs/rect)
-        drawRoundRect(
-            color = Color(0xFFFF9800),
-            topLeft = Offset(70f * scale, 20f * scale),
-            size = Size(80f * scale, 88f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(28f * scale, 28f * scale)
-        )
-        drawRoundRect(
-            color = Color(0xFFE65100),
-            topLeft = Offset(102f * scale, 108f * scale),
-            size = Size(16f * scale, 10f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(5f * scale)
-        )
-        // Warning triangle
-        val trianglePath = androidx.compose.ui.graphics.Path().apply {
-            moveTo(110f * scale, 38f * scale)
-            lineTo(130f * scale, 75f * scale)
-            lineTo(90f * scale, 75f * scale)
-            close()
-        }
-        drawPath(trianglePath, color = Color(0xFFFFF8E1))
-
-        // Recommendation card 1
-        drawRoundRect(
-            color = Color(0xFFE8F5E9),
-            topLeft = Offset(30f * scale, 125f * scale),
-            size = Size(70f * scale, 30f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f * scale),
-            style = Stroke(width = 1.5f * scale)
-        )
-        drawCircle(Color(0xFF4CAF50), radius = 6f * scale, center = Offset(44f * scale, 140f * scale))
-        drawRoundRect(Color(0xFFA5D6A7), topLeft = Offset(54f * scale, 135f * scale),
-            size = Size(38f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
-        drawRoundRect(Color(0xFFC8E6C9), topLeft = Offset(54f * scale, 143f * scale),
-            size = Size(28f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
-
-        // Recommendation card 2
-        drawRoundRect(
-            color = Color(0xFFFFF3E0),
-            topLeft = Offset(120f * scale, 125f * scale),
-            size = Size(70f * scale, 30f * scale),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f * scale),
-            style = Stroke(width = 1.5f * scale)
-        )
-        drawCircle(Color(0xFFFF9800), radius = 6f * scale, center = Offset(134f * scale, 140f * scale))
-        drawRoundRect(Color(0xFFFFCC80), topLeft = Offset(144f * scale, 135f * scale),
-            size = Size(38f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
-        drawRoundRect(Color(0xFFFFE0B2), topLeft = Offset(144f * scale, 143f * scale),
-            size = Size(28f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
-
-        // Leaf accents
-        rotate(20f, pivot = Offset(25f * scale, 105f * scale)) {
-            drawOval(Color(0xFF4CAF50).copy(alpha = 0.4f), topLeft = Offset(15f * scale, 90f * scale), size = Size(20f * scale, 30f * scale))
-        }
-        rotate(-20f, pivot = Offset(195f * scale, 105f * scale)) {
-            drawOval(Color(0xFF4CAF50).copy(alpha = 0.4f), topLeft = Offset(185f * scale, 90f * scale), size = Size(20f * scale, 30f * scale))
-        }
-    }
-
-    // "!" overlay
     Box(modifier = Modifier.fillMaxSize()) {
-        Text(
-            "!",
-            color = Color(0xFFE65100),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.align(Alignment.Center).offset(y = (-65).dp)
+
+        // ── PNG Bell ──────────────────────────────────────────
+        Image(
+            painter = painterResource(id = R.drawable.illustration_3),
+            contentDescription = "Alert bell",
+            modifier = Modifier
+                .fillMaxWidth(0.99f)
+                .aspectRatio(1f)
+                .align(Alignment.TopCenter)
+                .offset(y = 8.dp),
+            contentScale = ContentScale.Fit
         )
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val scale = size.width / 220f
+            val cardOffset = 30f  // ← increase/decrease this to push cards further down or up
+
+        // Recommendation card 1 (green)
+            drawRoundRect(
+                color = Color(0xFFE8F5E9),
+                topLeft = Offset(30f * scale, (125f + cardOffset) * scale),
+                size = Size(70f * scale, 30f * scale),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f * scale),
+                style = Stroke(width = 1.5f * scale)
+            )
+            drawCircle(Color(0xFF4CAF50), radius = 6f * scale, center = Offset(44f * scale, (140f + cardOffset) * scale))
+            drawRoundRect(Color(0xFFA5D6A7), topLeft = Offset(54f * scale, (135f + cardOffset) * scale),
+                size = Size(38f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
+            drawRoundRect(Color(0xFFC8E6C9), topLeft = Offset(54f * scale, (143f + cardOffset) * scale),
+                size = Size(28f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
+
+        // Recommendation card 2 (orange)
+            drawRoundRect(
+                color = Color(0xFFFFF3E0),
+                topLeft = Offset(120f * scale, (125f + cardOffset) * scale),
+                size = Size(70f * scale, 30f * scale),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f * scale),
+                style = Stroke(width = 1.5f * scale)
+            )
+            drawCircle(Color(0xFFFF9800), radius = 6f * scale, center = Offset(134f * scale, (140f + cardOffset) * scale))
+            drawRoundRect(Color(0xFFFFCC80), topLeft = Offset(144f * scale, (135f + cardOffset) * scale),
+                size = Size(38f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
+            drawRoundRect(Color(0xFFFFE0B2), topLeft = Offset(144f * scale, (143f + cardOffset) * scale),
+                size = Size(28f * scale, 5f * scale), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.5f * scale))
+
+        // Recommendation card 3 (red)
+            drawRoundRect(
+                color = Color(0xFFFFEBEE),
+                topLeft = Offset(75f * scale, (163f + cardOffset) * scale),
+                size = Size(70f * scale, 30f * scale),
+                cornerRadius = CornerRadius(8f * scale),
+                style = Stroke(width = 1.5f * scale)
+            )
+            drawCircle(Color(0xFFE53935), radius = 6f * scale, center = Offset(89f * scale, (178f + cardOffset) * scale))
+            drawRoundRect(Color(0xFFEF9A9A), topLeft = Offset(99f * scale, (173f + cardOffset) * scale),
+                size = Size(38f * scale, 5f * scale), cornerRadius = CornerRadius(2.5f * scale))
+            drawRoundRect(Color(0xFFFFCDD2), topLeft = Offset(99f * scale, (181f + cardOffset) * scale),
+                size = Size(28f * scale, 5f * scale), cornerRadius = CornerRadius(2.5f * scale))
+        }
     }
 }
+
+
+
