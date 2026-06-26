@@ -10,9 +10,13 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
+
+private const val TAG = "BLEPairing"
 
 // ── BLE constants (must match ESP32 firmware) ─────────────────────────────
 private const val TARGET_DEVICE_NAME = "RubberSense"
@@ -72,6 +79,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
     val temperatureMut   = remember { mutableStateOf<Float?>(null) }
     val humidityMut      = remember { mutableStateOf<Float?>(null) }
     val statusMsgMut     = remember { mutableStateOf("Tap 'Scan for Devices' to find your sensor") }
+    val toastMsgMut      = remember { mutableStateOf("") }
     val gattRef          = remember { mutableStateOf<BluetoothGatt?>(null) }
 
     val bleState     by bleStateMut
@@ -80,9 +88,19 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
     val temperature   = temperatureMut.value
     val humidity      = humidityMut.value
     val statusMsg     = statusMsgMut.value
+    val toastMsg      = toastMsgMut.value
 
+    val scope     = rememberCoroutineScope()
     val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     val btAdapter = btManager.adapter
+
+    fun showToast(msg: String) {
+        toastMsgMut.value = msg
+        scope.launch {
+            kotlinx.coroutines.delay(2_000)
+            toastMsgMut.value = ""
+        }
+    }
 
     // ── Permissions ───────────────────────────────────────────────────────
     val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -104,8 +122,9 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
     ) { results ->
         hasPermissions = results.values.all { it }
         if (!hasPermissions) {
-            statusMsgMut.value = "Bluetooth permissions are required to scan"
+            Log.w(TAG, "Bluetooth permissions denied by user")
             bleStateMut.value  = BleState.ERROR
+            showToast("Bluetooth permission is required to scan for sensors.")
         }
     }
 
@@ -113,8 +132,9 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
         ActivityResultContracts.StartActivityForResult()
     ) {
         if (btAdapter?.isEnabled != true) {
-            statusMsgMut.value = "Bluetooth must be enabled to pair"
-            bleStateMut.value  = BleState.ERROR
+            Log.w(TAG, "Bluetooth not enabled by user")
+            bleStateMut.value = BleState.ERROR
+            showToast("Please turn on Bluetooth to pair your sensor.")
         }
     }
 
@@ -132,13 +152,15 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                 mainHandler.post {
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {
+                            Log.d(TAG, "Connected to GATT server, discovering services...")
                             bleStateMut.value  = BleState.CONNECTED
-                            statusMsgMut.value = "Connected! Discovering services..."
+                            statusMsgMut.value = "Discovering sensor services..."
                             if (canConnect()) g.discoverServices()
                         }
                         BluetoothProfile.STATE_DISCONNECTED -> {
-                            bleStateMut.value  = BleState.DISCONNECTED
-                            statusMsgMut.value = "Sensor disconnected"
+                            Log.d(TAG, "Disconnected from GATT server (status=$status)")
+                            bleStateMut.value    = BleState.DISCONNECTED
+                            statusMsgMut.value   = "Sensor disconnected. Tap scan to reconnect."
                             temperatureMut.value = null
                             humidityMut.value    = null
                             g.close()
@@ -151,7 +173,8 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
             override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
                 if (status != BluetoothGatt.GATT_SUCCESS || !canConnect()) return
                 val char = g.getService(SERVICE_UUID)?.getCharacteristic(SENSOR_CHAR_UUID) ?: run {
-                    mainHandler.post { statusMsgMut.value = "Connected (sensor service not found)" }
+                    Log.e(TAG, "Sensor service or characteristic not found on device")
+                    mainHandler.post { showToast("Sensor service not found on this device.") }
                     return
                 }
                 @Suppress("DEPRECATION")
@@ -164,17 +187,18 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                     @Suppress("DEPRECATION")
                     g.writeDescriptor(descriptor)
                 }
-                mainHandler.post { statusMsgMut.value = "Receiving live sensor data" }
+                Log.d(TAG, "Notifications enabled — receiving live sensor data")
+                mainHandler.post { statusMsgMut.value = "Receiving live data from your sensor." }
             }
 
             private fun handleSensorData(bytes: ByteArray) {
                 val json = bytes.toString(Charsets.UTF_8)
                 val t = Regex(""""t":([\d.]+)""").find(json)?.groupValues?.get(1)?.toFloatOrNull()
                 val h = Regex(""""h":([\d.]+)""").find(json)?.groupValues?.get(1)?.toFloatOrNull()
+                Log.d(TAG, "Sensor data received: t=$t, h=$h")
                 mainHandler.post {
                     if (t != null) temperatureMut.value = t
                     if (h != null) humidityMut.value    = h
-                    statusMsgMut.value = "Live readings active"
                 }
             }
 
@@ -203,9 +227,10 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                 }
             }
             override fun onScanFailed(errorCode: Int) {
+                Log.e(TAG, "BLE scan failed with error code: $errorCode")
                 mainHandler.post {
-                    bleStateMut.value  = BleState.ERROR
-                    statusMsgMut.value = "Scan failed (error $errorCode). Try again."
+                    bleStateMut.value = BleState.ERROR
+                    showToast("Scan failed. Please try again.")
                 }
             }
         }
@@ -219,8 +244,10 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                 if (canScan()) btAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
                 bleStateMut.value  = BleState.IDLE
                 statusMsgMut.value = if (foundDevicesMut.value.isEmpty())
-                    "No devices found. Check device power."
+                    "Tap 'Scan for Devices' to find your sensor"
                 else "Tap a device below to connect"
+                Log.d(TAG, "Scan timed out. Devices found: ${foundDevicesMut.value.size}")
+                if (foundDevicesMut.value.isEmpty()) showToast("No devices found. Make sure your sensor is on.")
             }
         }
     }
@@ -241,16 +268,18 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
             enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return
         }
-        foundDevicesMut.value  = emptyList()
-        bleStateMut.value      = BleState.SCANNING
-        statusMsgMut.value     = "Scanning for nearby sensors..."
+        foundDevicesMut.value = emptyList()
+        bleStateMut.value     = BleState.SCANNING
+        statusMsgMut.value    = "Looking for nearby sensors..."
+        Log.d(TAG, "Starting BLE scan...")
         if (canScan()) btAdapter.bluetoothLeScanner?.startScan(scanCallback)
     }
 
     fun stopScan() {
         if (canScan()) btAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
         bleStateMut.value  = BleState.IDLE
-        statusMsgMut.value = "Scan stopped"
+        statusMsgMut.value = "Tap 'Scan for Devices' to find your sensor"
+        Log.d(TAG, "Scan stopped by user")
     }
 
     fun connectTo(device: BleDevice) {
@@ -258,6 +287,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
         bleStateMut.value      = BleState.CONNECTING
         connectedNameMut.value = device.name
         statusMsgMut.value     = "Connecting to ${device.name}..."
+        Log.d(TAG, "Connecting to ${device.name} (${device.address})...")
         if (canConnect()) {
             gattRef.value = device.device.connectGatt(context, false, gattCallback)
         }
@@ -268,6 +298,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
     }
 
     // ── UI ────────────────────────────────────────────────────────────────
+    Box(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -359,6 +390,28 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
             Spacer(Modifier.height(8.dp))
         }
     }
+
+    // ── 2-second toast at the bottom ─────────────────────────────────────
+    AnimatedVisibility(
+        visible = toastMsg.isNotEmpty(),
+        enter   = fadeIn(),
+        exit    = fadeOut(),
+        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
+    ) {
+        Surface(
+            shape  = RoundedCornerShape(24.dp),
+            color  = Color(0xFF1C1C1C).copy(alpha = 0.85f),
+            shadowElevation = 6.dp
+        ) {
+            Text(
+                text     = toastMsg,
+                color    = Color.White,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+            )
+        }
+    }
+    } // end Box
 }
 
 // ── Status Card ───────────────────────────────────────────────────────────

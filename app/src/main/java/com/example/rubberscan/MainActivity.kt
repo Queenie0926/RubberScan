@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
 import com.example.rubberscan.ui.theme.RubberScanTheme
+import com.google.firebase.auth.FirebaseAuth
 
 private val bottomNavRoutes = setOf(
     "home", "scan", "history", "disease-guide", "profile", "ble-pairing"
@@ -51,9 +52,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
+                    val startDestination = if (FirebaseAuth.getInstance().currentUser != null) "home" else "welcome"
                     NavHost(
                         navController      = nav,
-                        startDestination   = "welcome",
+                        startDestination   = startDestination,
                         modifier           = androidx.compose.ui.Modifier.padding(innerPadding),
                         enterTransition    = { slideInHorizontally(tween(280)) { it } },
                         exitTransition     = { slideOutHorizontally(tween(280)) { -it } },
@@ -172,6 +174,12 @@ class MainActivity : ComponentActivity() {
                             ProfileScreen(
                                 onBack     = { nav.popBackStack() },
                                 onNavigate = { route -> nav.navigate(route) },
+                                onSignOut  = {
+                                    authViewModel.signOut()
+                                    nav.navigate("welcome") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                },
                                 userName   = currentUser?.name ?: "",
                                 userEmail  = currentUser?.email ?: ""
                             )
