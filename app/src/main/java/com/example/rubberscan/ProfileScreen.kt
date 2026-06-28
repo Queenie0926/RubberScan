@@ -16,18 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val ProfileGreenDark = Color(0xFF1B5E20)
-private val ProfilePageBg    = Color(0xFFF1F8F1)
-private val ProfileCardBg    = Color(0xFFFFFFFF)
-private val ProfileTextMuted = Color(0xFF9CA3AF)
-private val OrangeDark  = Color(0xFFE65100)
-private val OrangeLight = Color(0xFFFFF3E0)
 
 // ── Data models ────────────────────────────────────────────
 data class ProfileMenuItem(
@@ -69,14 +63,14 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ProfilePageBg)
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
         // ── Header ──────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ProfileGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp)
         ) {
             Row(
@@ -117,7 +111,7 @@ fun ProfileScreen(
         ) {
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = ProfileCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -155,10 +149,10 @@ fun ProfileScreen(
                         Spacer(Modifier.height(3.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.LocationOn, contentDescription = null,
-                                tint = ProfileTextMuted, modifier = Modifier.size(12.dp))
+                                tint = TextMuted2, modifier = Modifier.size(12.dp))
                             Spacer(Modifier.width(3.dp))
                             Text("Marilog District, Davao City",
-                                color = ProfileTextMuted, fontSize = 11.sp)
+                                color = TextMuted2, fontSize = 11.sp)
                         }
                         Spacer(Modifier.height(6.dp))
                         Surface(shape = RoundedCornerShape(50), color = Color(0xFFE8F5E9)) {
@@ -178,7 +172,7 @@ fun ProfileScreen(
         ) {
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = ProfileCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -195,7 +189,7 @@ fun ProfileScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(stat.value, fontWeight = FontWeight.Black,
                                     fontSize = 22.sp, color = stat.color)
-                                Text(stat.label, color = ProfileTextMuted, fontSize = 11.sp)
+                                Text(stat.label, color = TextMuted2, fontSize = 11.sp)
                             }
                         }
                     }
@@ -215,7 +209,7 @@ fun ProfileScreen(
             // About card
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = ProfileCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -230,7 +224,7 @@ fun ProfileScreen(
                         Text("About RubberScan", fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp, color = Color(0xFF424242))
                         Text("Version 1.0.0 · Capstone Project",
-                            color = ProfileTextMuted, fontSize = 11.sp)
+                            color = TextMuted2, fontSize = 11.sp)
                     }
                     Surface(shape = RoundedCornerShape(50), color = Color(0xFFE8F5E9)) {
                         Text("v1.0.0", color = Color(0xFF1B5E20),
@@ -266,7 +260,7 @@ fun ProfileScreen(
 fun MenuSectionCard(items: List<ProfileMenuItem>, onNavigate: (String) -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ProfileCardBg),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {

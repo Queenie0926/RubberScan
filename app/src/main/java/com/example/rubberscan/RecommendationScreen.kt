@@ -15,17 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val RecGreenDark  = Color(0xFF1B5E20)
-private val RecPageBg     = Color(0xFFF1F8F1)
-private val RecCardBg     = Color(0xFFFFFFFF)
-private val RecStepsBg    = Color(0xFFF8F8F8)
-private val RecTextMuted  = Color(0xFF9E9E9E)
 
 // ── Data model ─────────────────────────────────────────────
 data class Recommendation(
@@ -106,14 +101,14 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(RecPageBg)
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
         // ── Header ──────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(RecGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -154,7 +149,7 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
             Button(
                 onClick = { },
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = RecGreenDark),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenDark),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -176,7 +171,7 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
 fun RecommendationCard(rec: Recommendation) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = RecCardBg),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -222,7 +217,7 @@ fun RecommendationCard(rec: Recommendation) {
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(RecStepsBg)
+                    .background(DividerLight)
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {

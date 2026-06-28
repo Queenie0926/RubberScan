@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 
 val bottomItems = listOf(
     BottomNavItem(

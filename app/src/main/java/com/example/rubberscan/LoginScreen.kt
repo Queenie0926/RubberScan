@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
@@ -37,9 +38,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val AuthFieldBg  = Color(0xFFF5F5F5)
-private val AuthHint     = Color(0xFFAAAAAA)
-private val AuthText     = Color(0xFF1C1C1C)
 
 // Welcome back! Sign in to continue monitoring your rubber trees.
 @Composable
@@ -90,7 +88,7 @@ fun LoginScreen(
                         .padding(top = 32.dp, bottom = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Login", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText)
+                    Text("Login", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
 
                     Spacer(Modifier.height(8.dp))
 
@@ -241,7 +239,7 @@ fun SignUpScreen(
                         .padding(top = 32.dp, bottom = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Sign Up", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = AuthText)
+                    Text("Sign Up", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
 
                     Spacer(Modifier.height(8.dp))
 
@@ -370,13 +368,13 @@ fun AuthInputField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = true,
         colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = AuthFieldBg,
-            focusedContainerColor   = AuthFieldBg,
+            unfocusedContainerColor = FieldBg,
+            focusedContainerColor   = FieldBg,
             unfocusedIndicatorColor = Color.Transparent,
             focusedIndicatorColor   = Color(0xFF1B5E20),
             cursorColor             = Color(0xFF1B5E20)
         ),
-        textStyle = TextStyle(fontSize = 14.sp, color = AuthText),
+        textStyle = TextStyle(fontSize = 14.sp, color = TextPrimary),
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth().height(54.dp)
     )
@@ -433,7 +431,7 @@ fun GoogleButton(onClick: () -> Unit, isLoading: Boolean = false) {
             )
             Spacer(Modifier.width(10.dp))
             Text("Continue with Google",
-                fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AuthText)
+                fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
         }
     }
 }

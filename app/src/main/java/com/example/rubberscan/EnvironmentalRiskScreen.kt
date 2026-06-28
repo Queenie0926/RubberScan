@@ -16,18 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val GreenDark      = Color(0xFF1B5E20)
-private val PageBg         = Color(0xFFF1F8F1)
-private val CardBg         = Color(0xFFFFFFFF)
-private val TextMuted      = Color(0xFF9E9E9E)
-private val OrangeAccent   = Color(0xFFE65100)
-private val OrangeBg       = Color(0xFFFFF3E0)
 
 // ── Data models ────────────────────────────────────────────
 private enum class RiskLevel { LOW, MODERATE, HIGH }
@@ -397,7 +391,7 @@ private fun ClimateRiskSummaryCard(items: List<ClimateRiskItem>) {
                     Icon(
                         Icons.Default.Warning,
                         contentDescription = null,
-                        tint = OrangeAccent,
+                        tint = OrangeDark,
                         modifier = Modifier.size(18.dp)
                     )
                 }

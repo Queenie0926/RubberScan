@@ -24,17 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.drawscope.Stroke               // ← ADD
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val WarningGreenDark = Color(0xFF1B5E20)
-private val WarningPageBg    = Color(0xFFF1F8F1)
-private val WarningCardBg    = Color(0xFFFFFFFF)
-private val WarningTextMuted = Color(0xFF9E9E9E)
 
 // ── Data models ────────────────────────────────────────────
 data class RiskFactor(
@@ -109,14 +105,14 @@ fun EarlyWarningScreen(onBack: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(WarningPageBg)
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
         // ── Header ──────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(WarningGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -202,7 +198,7 @@ fun EarlyWarningScreen(onBack: () -> Unit = {}) {
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.weight(1f))
                             Text("Just now",
-                                color = WarningTextMuted,
+                                color = TextMuted,
                                 fontSize = 11.sp)
                         }
                     }
@@ -212,7 +208,7 @@ fun EarlyWarningScreen(onBack: () -> Unit = {}) {
             // ── Risk Factors ─────────────────────────────────
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = WarningCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -237,7 +233,7 @@ fun EarlyWarningScreen(onBack: () -> Unit = {}) {
             // ── Preventive Actions ────────────────────────────
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = WarningCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -259,7 +255,7 @@ fun EarlyWarningScreen(onBack: () -> Unit = {}) {
             Button(
                 onClick = { },
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = WarningGreenDark),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenDark),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -317,7 +313,7 @@ fun RiskFactorRow(factor: RiskFactor) {
                     )
                 }
             }
-            Text(factor.desc, color = WarningTextMuted, fontSize = 11.sp)
+            Text(factor.desc, color = TextMuted, fontSize = 11.sp)
         }
     }
 }
@@ -338,7 +334,7 @@ fun PreventiveActionRow(action: PreventiveAction) {
         Column(modifier = Modifier.weight(1f)) {
             Text(action.action, fontWeight = FontWeight.Medium,
                 fontSize = 13.sp, color = Color(0xFF1C1C1C))
-            Text(action.freq, color = WarningTextMuted, fontSize = 11.sp)
+            Text(action.freq, color = TextMuted, fontSize = 11.sp)
         }
         // ── FIX: removed wrapping Box; Canvas is now a direct composable
         //         with its own Modifier.size(), and DrawScope APIs resolve

@@ -1,5 +1,7 @@
 package com.example.rubberscan
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,11 +10,12 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Login
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
@@ -21,12 +24,28 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import kotlinx.coroutines.delay
+
+private val logoFrames = listOf(
+    R.drawable.logo_1,
+    R.drawable.logo_2,
+    R.drawable.logo_3,
+    R.drawable.logo_4,
+    R.drawable.logo_5
+)
 
 @Composable
 fun WelcomeScreen(
     onGetStarted: () -> Unit,
     onGuest: () -> Unit
 ) {
+    var frameIndex by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(220)
+            frameIndex = (frameIndex + 1) % logoFrames.size
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -46,15 +65,20 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(110.dp),
+                    modifier = Modifier.size(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painterResource(R.drawable.app_logo),
-                        contentDescription = null,
-                        modifier = Modifier.size(110.dp)
-                    )
+                    Crossfade(
+                        targetState = frameIndex,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "logo_anim"
+                    ) { idx ->
+                        Image(
+                            painterResource(logoFrames[idx]),
+                            contentDescription = null,
+                            modifier = Modifier.size(200.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

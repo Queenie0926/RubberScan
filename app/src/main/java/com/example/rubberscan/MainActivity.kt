@@ -8,20 +8,42 @@ import androidx.activity.viewModels
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
+import androidx.test.espresso.base.Default
+import com.example.rubberscan.ui.theme.GreenDark
 import com.example.rubberscan.ui.theme.RubberScanTheme
 import com.google.firebase.auth.FirebaseAuth
 
 private val bottomNavRoutes = setOf(
     "home", "scan", "history", "disease-guide", "profile", "ble-pairing"
 )
+
+// Routes that require a logged-in account
+private val guestRestrictedRoutes = setOf("history", "profile")
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
@@ -36,6 +58,43 @@ class MainActivity : ComponentActivity() {
                 val nav          = rememberNavController()
                 val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
                 val currentUser  by authViewModel.currentUser.collectAsState()
+                val isGuest      = currentUser == null
+
+                var showGuestDialog by remember { mutableStateOf(false) }
+
+                // ── Guest gate dialog ────────────────────────
+                if (showGuestDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showGuestDialog = false },
+                        title = {
+                            Text("Account Required", fontWeight = FontWeight.Bold)
+                        },
+                        text = {
+                            Text("This feature is only available to logged-in users. Sign up or log in to access your history and profile.")
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showGuestDialog = false
+                                    nav.navigate("login") {
+                                        popUpTo("home") { saveState = true }
+                                    }
+                                },
+                                colors = ButtonDefaults.textButtonColors(contentColor = GreenDark)
+                            ) {
+                                Text("Log In / Sign Up", fontWeight = FontWeight.SemiBold)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showGuestDialog = false },
+                                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
 
                 Scaffold(
                     bottomBar = {
@@ -43,10 +102,14 @@ class MainActivity : ComponentActivity() {
                             AppBottomNavBar(
                                 currentRoute = currentRoute ?: "home",
                                 onNavigate   = { route ->
-                                    nav.navigate(route) {
-                                        popUpTo("home") { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState    = true
+                                    if (isGuest && route in guestRestrictedRoutes) {
+                                        showGuestDialog = true
+                                    } else {
+                                        nav.navigate(route) {
+                                            popUpTo("home") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState    = true
+                                        }
                                     }
                                 }
                             )
@@ -100,9 +163,16 @@ class MainActivity : ComponentActivity() {
 
                         composable("home") {
                             HomeScreen(
-                                onNavigate   = { route -> nav.navigate(route) },
+                                onNavigate   = { route ->
+                                    if (isGuest && route in guestRestrictedRoutes) {
+                                        showGuestDialog = true
+                                    } else {
+                                        nav.navigate(route)
+                                    }
+                                },
                                 userName     = currentUser?.name ?: "",
-                                bleViewModel = bleViewModel
+                                bleViewModel = bleViewModel,
+                                isGuest      = isGuest
                             )
                         }
 

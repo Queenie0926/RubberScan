@@ -16,15 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val DiseaseGreenDark = Color(0xFF1B5E20)
-private val DiseasePageBg    = Color(0xFFF1F8F1)
-private val DiseaseCardBg    = Color(0xFFFFFFFF)
-private val DiseaseTextMuted = Color(0xFF9E9E9E)
 
 // ── Data model ─────────────────────────────────────────────
 data class DiseaseInfo(
@@ -154,13 +150,13 @@ fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DiseasePageBg)
+            .background(PageBg)
     ) {
         // ── Header ──────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(DiseaseGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -231,7 +227,7 @@ fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
 fun DiseaseListItem(disease: DiseaseInfo, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = DiseaseCardBg),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -259,13 +255,13 @@ fun DiseaseListItem(disease: DiseaseInfo, onClick: () -> Unit) {
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp))
                     }
                     Spacer(Modifier.width(6.dp))
-                    Text(disease.prevalence, color = DiseaseTextMuted, fontSize = 11.sp)
+                    Text(disease.prevalence, color = TextMuted, fontSize = 11.sp)
                 }
                 Spacer(Modifier.height(3.dp))
                 Text(disease.name, fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp, color = Color(0xFF1C1C1C))
                 Text("Severity: ${disease.severity}",
-                    color = DiseaseTextMuted, fontSize = 11.sp)
+                    color = TextMuted, fontSize = 11.sp)
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null,
                 tint = Color(0xFF9CA3AF), modifier = Modifier.size(18.dp))
@@ -279,14 +275,14 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DiseasePageBg)
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
         // Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(DiseaseGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -314,7 +310,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             // Header card
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DiseaseCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -342,7 +338,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
                         Text(disease.name, fontWeight = FontWeight.Bold,
                             fontSize = 16.sp, color = Color(0xFF1C1C1C))
                         Text("Severity: ${disease.severity} · ${disease.prevalence}",
-                            color = DiseaseTextMuted, fontSize = 11.sp)
+                            color = TextMuted, fontSize = 11.sp)
                     }
                 }
             }
@@ -350,7 +346,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             // Symptoms card
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DiseaseCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -396,7 +392,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             // Actions card
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DiseaseCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {

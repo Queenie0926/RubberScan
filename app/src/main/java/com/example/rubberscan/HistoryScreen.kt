@@ -15,17 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val HistoryGreenDark  = Color(0xFF1B5E20)
-private val HistoryGreenLight = Color(0xFFE8F5E9)
-private val HistoryPageBg     = Color(0xFFF1F8F1)
-private val HistoryCardBg     = Color(0xFFFFFFFF)
-private val HistoryBorderGray = Color(0xFFF0F0F0)
-private val HistoryTextMuted  = Color(0xFF9E9E9E)
 
 // ── Data model ─────────────────────────────────────────────
 data class InspectionRecord(
@@ -72,13 +66,13 @@ fun HistoryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(HistoryPageBg)
+            .background(PageBg)
     ) {
         // ── Header ──────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(HistoryGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
         ) {
             // Title row
@@ -126,7 +120,7 @@ fun HistoryScreen(
                     ) {
                         Text(
                             text = filter,
-                            color = if (isActive) HistoryGreenDark
+                            color = if (isActive) GreenDark
                             else Color.White.copy(alpha = 0.85f),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -174,7 +168,7 @@ fun HistoryScreen(
 fun StatCard(value: String, label: String, valueColor: Color, modifier: Modifier) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = HistoryCardBg),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = modifier
     ) {
@@ -186,7 +180,7 @@ fun StatCard(value: String, label: String, valueColor: Color, modifier: Modifier
         ) {
             Text(value, fontWeight = FontWeight.Bold,
                 fontSize = 20.sp, color = valueColor)
-            Text(label, color = HistoryTextMuted, fontSize = 11.sp)
+            Text(label, color = TextMuted, fontSize = 11.sp)
         }
     }
 }
@@ -196,7 +190,7 @@ fun StatCard(value: String, label: String, valueColor: Color, modifier: Modifier
 fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = HistoryCardBg),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -230,11 +224,11 @@ fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
                         fontSize = 14.sp,
                         color = Color(0xFF1C1C1C))
                     Text(record.time,
-                        color = HistoryTextMuted,
+                        color = TextMuted,
                         fontSize = 11.sp)
                 }
                 Text(record.date,
-                    color = HistoryTextMuted,
+                    color = TextMuted,
                     fontSize = 11.sp)
                 Spacer(Modifier.height(6.dp))
                 Row(

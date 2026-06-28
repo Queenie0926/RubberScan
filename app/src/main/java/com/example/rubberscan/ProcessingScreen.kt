@@ -15,19 +15,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.drawscope.rotate
 import kotlinx.coroutines.delay
 
-// ── Colour tokens ──────────────────────────────────────────
-private val ProcessingGreenDark  = Color(0xFF1B5E20)
-private val ProcessingGreenMid   = Color(0xFF4CAF50)
-private val ProcessingGreenLight = Color(0xFFE8F5E9)
-private val ProcessingPageBg     = Color(0xFFF1F8F1)
-private val ProcessingTextMuted  = Color(0xFF9CA3AF)
-private val ProcessingCardBg     = Color(0xFFFFFFFF)
 
 // ── Step labels ────────────────────────────────────────────
 private val analysisSteps = listOf(
@@ -90,7 +84,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ProcessingPageBg)
+            .background(PageBg)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -101,7 +95,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
             modifier = Modifier
                 .size(160.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(ProcessingCardBg)
+                .background(CardBg)
                 .border(1.dp, Color(0xFFDCEEDC), RoundedCornerShape(24.dp)),
             contentAlignment = Alignment.Center
         ) {
@@ -120,7 +114,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
                 modifier = Modifier
                     .size(96.dp)
                     .clip(CircleShape)
-                    .background(ProcessingGreenLight)
+                    .background(GreenLight)
             )
 
             // Expanding ripple rings
@@ -143,7 +137,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
                     .size(64.dp)
                     .scale(pulseScale)
                     .clip(CircleShape)
-                    .background(ProcessingGreenDark),
+                    .background(GreenDark),
                 contentAlignment = Alignment.Center
             ) {
                 ScanIconCanvas(modifier = Modifier.size(32.dp))
@@ -163,7 +157,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
         Text(
             "Scanning your rubber leaf for disease indicators...",
             fontSize = 13.sp,
-            color = ProcessingTextMuted,
+            color = TextMuted2,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
 
@@ -172,7 +166,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
         // ── Steps Card ─────────────────────────────────────
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = ProcessingCardBg),
+            colors = CardDefaults.cardColors(containerColor = CardBg),
             elevation = CardDefaults.cardElevation(1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -186,8 +180,8 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
                     ) {
                         // Step indicator circle
                         val circleColor = when {
-                            i < stepIndex -> ProcessingGreenMid
-                            i == stepIndex -> ProcessingGreenDark
+                            i < stepIndex -> GreenAccent
+                            i == stepIndex -> GreenDark
                             else -> Color(0xFFF0F0F0)
                         }
                         Box(
@@ -253,9 +247,9 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
                             fontSize = 13.sp,
                             fontWeight = if (i == stepIndex) FontWeight.SemiBold else FontWeight.Normal,
                             color = when {
-                                i < stepIndex -> ProcessingGreenMid
-                                i == stepIndex -> ProcessingGreenDark
-                                else -> ProcessingTextMuted
+                                i < stepIndex -> GreenAccent
+                                i == stepIndex -> GreenDark
+                                else -> TextMuted2
                             }
                         )
                     }
@@ -275,12 +269,12 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Processing", fontSize = 11.sp, color = ProcessingTextMuted)
+                Text("Processing", fontSize = 11.sp, color = TextMuted2)
                 Text(
                     "${progress.toInt()}%",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ProcessingGreenDark
+                    color = GreenDark
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -296,7 +290,7 @@ fun ProcessingScreen(onComplete: () -> Unit = {}) {
                         .fillMaxWidth(progress / 100f)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(50))
-                        .background(ProcessingGreenMid)
+                        .background(GreenAccent)
                 )
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,21 +37,6 @@ private data class BottomNavItem(
     val route: String
 )
 
-// ── Colour tokens ──────────────────────────────────────────
-private val GreenDark   = Color(0xFF1B5E20)
-private val GreenLight  = Color(0xFFE8F5E9)
-private val GreenMid    = Color(0xFF388E3C)
-private val BlueDark    = Color(0xFF0D47A1)
-private val BlueLight   = Color(0xFFE3F2FD)
-private val PurpleDark  = Color(0xFF6A1B9A)
-private val PurpleLight = Color(0xFFF3E5F5)
-private val OrangeDark  = Color(0xFFE65100)
-private val OrangeLight = Color(0xFFFFF3E0)
-private val PageBg      = Color(0xFFF1F8F1)
-private val CardBg      = Color(0xFFFFFFFF)
-private val TextPrimary = Color(0xFF1C1C1C)
-private val TextMuted   = Color(0xFF9E9E9E)
-private val BorderGray  = Color(0xFFF0F0F0)
 
 // ── Data models ────────────────────────────────────────────
 data class QuickAction(
@@ -80,7 +66,7 @@ data class RecentInspection(
 
 // ── Home Screen ────────────────────────────────────────────
 @Composable
-fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleViewModel: BleViewModel? = null) {
+fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleViewModel: BleViewModel? = null, isGuest: Boolean = false) {
 
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
@@ -324,24 +310,26 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
             Spacer(Modifier.height(16.dp))
 
             // ── Recent Inspections ──────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Recent Inspections", fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp, color = Color(0xFF4A4A4A))
-                TextButton(onClick = { onNavigate("history") }) {
-                    Text("View all", color = GreenDark,
-                        fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    Icon(Icons.Default.ChevronRight, contentDescription = null,
-                        tint = GreenDark, modifier = Modifier.size(16.dp))
+            if (!isGuest) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Recent Inspections", fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp, color = Color(0xFF4A4A4A))
+                    TextButton(onClick = { onNavigate("history") }) {
+                        Text("View all", color = GreenDark,
+                            fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.ChevronRight, contentDescription = null,
+                            tint = GreenDark, modifier = Modifier.size(16.dp))
+                    }
                 }
-            }
 
-            recentInspections.forEach { item ->
-                Spacer(Modifier.height(8.dp))
-                RecentInspectionRow(item, onClick = { onNavigate("history-detail") })
+                recentInspections.forEach { item ->
+                    Spacer(Modifier.height(8.dp))
+                    RecentInspectionRow(item, onClick = { onNavigate("history-detail") })
+                }
             }
 
             Spacer(Modifier.height(24.dp))

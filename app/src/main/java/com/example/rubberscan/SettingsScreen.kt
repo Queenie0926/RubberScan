@@ -15,16 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val SettingsGreenDark = Color(0xFF1B5E20)
-private val SettingsPageBg    = Color(0xFFF1F8F1)
-private val SettingsCardBg    = Color(0xFFFFFFFF)
-private val SettingsTextMuted = Color(0xFF9CA3AF)
 
 // ── Settings Screen ────────────────────────────────────────
 @Composable
@@ -32,23 +28,23 @@ fun SettingsScreen(
     onBack: () -> Unit = {},
     onNavigate: (String) -> Unit = {}
 ) {
-    var darkMode        by remember { mutableStateOf(false) }
-    var notifications   by remember { mutableStateOf(true) }
-    var diseaseAlerts   by remember { mutableStateOf(true) }
-    var weatherAlerts   by remember { mutableStateOf(false) }
-    var autoReconnect   by remember { mutableStateOf(true) }
+    var darkMode      by remember { mutableStateOf(false) }
+    var notifications by remember { mutableStateOf(true) }
+    var diseaseAlerts by remember { mutableStateOf(true) }
+    var weatherAlerts by remember { mutableStateOf(false) }
+    var autoReconnect by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SettingsPageBg)
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
         // ── Header ──────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SettingsGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -88,18 +84,11 @@ fun SettingsScreen(
 
             // BLE Sensor
             SettingsSectionCard(title = "BLE Sensor") {
-                SettingsNavRow(
-                    icon = Icons.Default.Bluetooth,
-                    iconTint = Color(0xFF00695C),
-                    iconBg = Color(0xFFE0F2F1),
-                    label = "Manage Sensors",
-                    onClick = { onNavigate("ble-pairing") }
-                )
-                HorizontalDivider(color = Color(0xFFF0F0F0))
+                HorizontalDivider(color = BorderGray)
                 SettingsToggleRow(
                     icon = Icons.Default.Refresh,
-                    iconTint = Color(0xFF1B5E20),
-                    iconBg = Color(0xFFE8F5E9),
+                    iconTint = GreenDark,
+                    iconBg = GreenLight,
                     label = "Auto-reconnect",
                     checked = autoReconnect,
                     onCheckedChange = { autoReconnect = it }
@@ -110,24 +99,24 @@ fun SettingsScreen(
             SettingsSectionCard(title = "Notifications") {
                 SettingsToggleRow(
                     icon = Icons.Default.Notifications,
-                    iconTint = Color(0xFFE65100),
-                    iconBg = Color(0xFFFFF3E0),
+                    iconTint = OrangeDark,
+                    iconBg = OrangeLight,
                     label = "Push Notifications",
                     checked = notifications,
                     onCheckedChange = { notifications = it }
                 )
-                HorizontalDivider(color = Color(0xFFF0F0F0))
+                HorizontalDivider(color = BorderGray)
                 SettingsEmojiToggleRow(
                     emoji = "🍂",
-                    iconBg = Color(0xFFFFF3E0),
+                    iconBg = OrangeLight,
                     label = "Disease Alerts",
                     checked = diseaseAlerts,
                     onCheckedChange = { diseaseAlerts = it }
                 )
-                HorizontalDivider(color = Color(0xFFF0F0F0))
+                HorizontalDivider(color = BorderGray)
                 SettingsEmojiToggleRow(
                     emoji = "🌧️",
-                    iconBg = Color(0xFFE3F2FD),
+                    iconBg = BlueLight,
                     label = "Weather Alerts",
                     checked = weatherAlerts,
                     onCheckedChange = { weatherAlerts = it }
@@ -138,15 +127,15 @@ fun SettingsScreen(
             SettingsSectionCard(title = "Data Storage") {
                 SettingsInfoRow(
                     icon = Icons.Default.Storage,
-                    iconTint = Color(0xFF546E7A),
-                    iconBg = Color(0xFFECEFF1),
+                    iconTint = SlateGray,
+                    iconBg = SlateGrayLight,
                     label = "Storage Used",
                     info = "142 MB"
                 )
-                HorizontalDivider(color = Color(0xFFF0F0F0))
+                HorizontalDivider(color = BorderGray)
                 SettingsEmojiNavRow(
                     emoji = "🗑️",
-                    iconBg = Color(0xFFFFEBEE),
+                    iconBg = RedLight,
                     label = "Clear Old Records",
                     onClick = { }
                 )
@@ -156,8 +145,8 @@ fun SettingsScreen(
             SettingsSectionCard(title = "Language") {
                 SettingsNavRowWithInfo(
                     icon = Icons.Default.Language,
-                    iconTint = Color(0xFF0D47A1),
-                    iconBg = Color(0xFFE3F2FD),
+                    iconTint = BlueDark,
+                    iconBg = BlueLight,
                     label = "Display Language",
                     info = "English"
                 )
@@ -167,15 +156,15 @@ fun SettingsScreen(
             SettingsSectionCard(title = "About System") {
                 SettingsInfoRow(
                     icon = Icons.Default.Info,
-                    iconTint = Color(0xFF1B5E20),
-                    iconBg = Color(0xFFE8F5E9),
+                    iconTint = GreenDark,
+                    iconBg = GreenLight,
                     label = "App Version",
                     info = "1.0.0"
                 )
-                HorizontalDivider(color = Color(0xFFF0F0F0))
+                HorizontalDivider(color = BorderGray)
                 SettingsEmojiNavRow(
                     emoji = "📄",
-                    iconBg = Color(0xFFF3F4F6),
+                    iconBg = SurfaceGray,
                     label = "Privacy Policy",
                     onClick = { }
                 )
@@ -192,16 +181,17 @@ fun SettingsSectionCard(title: String, content: @Composable ColumnScope.() -> Un
     Column {
         Text(
             title.uppercase(),
-            color = Color(0xFF757575),
+            color = TextMuted,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = androidx.compose.ui.unit.TextUnit(0.07f,
-                androidx.compose.ui.unit.TextUnitType.Em),
+            letterSpacing = androidx.compose.ui.unit.TextUnit(
+                0.07f, androidx.compose.ui.unit.TextUnitType.Em
+            ),
             modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
         )
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = SettingsCardBg),
+            colors = CardDefaults.cardColors(containerColor = CardBg),
             elevation = CardDefaults.cardElevation(1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -238,16 +228,16 @@ fun SettingsToggleRow(
         }
         Spacer(Modifier.width(12.dp))
         Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = Color(0xFF1C1C1C),
+            fontSize = 14.sp, color = TextPrimary,
             modifier = Modifier.weight(1f))
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = SettingsGreenDark,
+                checkedTrackColor = GreenDark,
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0xFFD1D5DB)
+                uncheckedTrackColor = BorderLight
             )
         )
     }
@@ -279,16 +269,16 @@ fun SettingsEmojiToggleRow(
         }
         Spacer(Modifier.width(12.dp))
         Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = Color(0xFF1C1C1C),
+            fontSize = 14.sp, color = TextPrimary,
             modifier = Modifier.weight(1f))
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = SettingsGreenDark,
+                checkedTrackColor = GreenDark,
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0xFFD1D5DB)
+                uncheckedTrackColor = BorderLight
             )
         )
     }
@@ -322,10 +312,10 @@ fun SettingsNavRow(
         }
         Spacer(Modifier.width(12.dp))
         Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = Color(0xFF1C1C1C),
+            fontSize = 14.sp, color = TextPrimary,
             modifier = Modifier.weight(1f))
         Icon(Icons.Default.ChevronRight, contentDescription = null,
-            tint = SettingsTextMuted, modifier = Modifier.size(16.dp))
+            tint = TextMuted2, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -356,12 +346,12 @@ fun SettingsNavRowWithInfo(
         }
         Spacer(Modifier.width(12.dp))
         Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = Color(0xFF1C1C1C),
+            fontSize = 14.sp, color = TextPrimary,
             modifier = Modifier.weight(1f))
-        Text(info, color = SettingsTextMuted, fontSize = 13.sp)
+        Text(info, color = TextMuted2, fontSize = 13.sp)
         Spacer(Modifier.width(4.dp))
         Icon(Icons.Default.ChevronRight, contentDescription = null,
-            tint = SettingsTextMuted, modifier = Modifier.size(16.dp))
+            tint = TextMuted2, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -392,9 +382,9 @@ fun SettingsInfoRow(
         }
         Spacer(Modifier.width(12.dp))
         Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = Color(0xFF1C1C1C),
+            fontSize = 14.sp, color = TextPrimary,
             modifier = Modifier.weight(1f))
-        Text(info, color = SettingsTextMuted, fontSize = 13.sp)
+        Text(info, color = TextMuted2, fontSize = 13.sp)
     }
 }
 
@@ -424,9 +414,9 @@ fun SettingsEmojiNavRow(
         }
         Spacer(Modifier.width(12.dp))
         Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = Color(0xFF1C1C1C),
+            fontSize = 14.sp, color = TextPrimary,
             modifier = Modifier.weight(1f))
         Icon(Icons.Default.ChevronRight, contentDescription = null,
-            tint = SettingsTextMuted, modifier = Modifier.size(16.dp))
+            tint = TextMuted2, modifier = Modifier.size(16.dp))
     }
 }

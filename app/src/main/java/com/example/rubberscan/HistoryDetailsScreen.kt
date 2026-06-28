@@ -18,17 +18,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colour tokens ──────────────────────────────────────────
-private val DetailGreenDark  = Color(0xFF1B5E20)
-private val DetailPageBg     = Color(0xFFF1F8F1)
-private val DetailCardBg     = Color(0xFFFFFFFF)
-private val DetailTextMuted  = Color(0xFF9E9E9E)
 
 // ── History Detail Screen ───────────────────────────────────
 @Composable
@@ -36,14 +32,14 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DetailPageBg)
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
         // ── Header ──────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(DetailGreenDark)
+                .background(GreenDark)
                 .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -84,7 +80,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
             // ── Captured Image Card ──────────────────────────
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DetailCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -120,7 +116,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
                             Spacer(Modifier.height(4.dp))
                             Text("Pestalotiopsis LFD", fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp, color = Color(0xFF1C1C1C))
-                            Text("Confidence: 88%", color = DetailTextMuted, fontSize = 11.sp)
+                            Text("Confidence: 88%", color = TextMuted, fontSize = 11.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFFFFF3E0)) {
@@ -129,7 +125,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("Severity Grade", color = DetailTextMuted, fontSize = 11.sp)
+                            Text("Severity Grade", color = TextMuted, fontSize = 11.sp)
                         }
                     }
                 }
@@ -138,7 +134,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
             // ── Environmental Data ───────────────────────────
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DetailCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -162,7 +158,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
                             Column {
                                 Text("29.1°C", fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp, color = Color(0xFF1C1C1C))
-                                Text("Temperature", color = DetailTextMuted, fontSize = 11.sp)
+                                Text("Temperature", color = TextMuted, fontSize = 11.sp)
                             }
                         }
                         // Humidity
@@ -180,7 +176,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
                             Column {
                                 Text("74%", fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp, color = Color(0xFF1C1C1C))
-                                Text("Humidity", color = DetailTextMuted, fontSize = 11.sp)
+                                Text("Humidity", color = TextMuted, fontSize = 11.sp)
                             }
                         }
                     }
@@ -190,7 +186,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
             // ── Inspection Info ──────────────────────────────
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DetailCardBg),
+                colors = CardDefaults.cardColors(containerColor = CardBg),
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -201,7 +197,7 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
 
                     InfoRow(
                         icon = Icons.Default.CalendarMonth,
-                        iconTint = DetailGreenDark,
+                        iconTint = GreenDark,
                         label = "Date & Time",
                         value = "Jun 8, 2026 · 02:30 PM"
                     )
@@ -282,7 +278,7 @@ fun InfoRow(
         }
         Spacer(Modifier.width(10.dp))
         Column {
-            Text(label, color = DetailTextMuted, fontSize = 11.sp)
+            Text(label, color = TextMuted, fontSize = 11.sp)
             Text(value, fontWeight = FontWeight.Medium,
                 fontSize = 13.sp, color = Color(0xFF1C1C1C))
         }

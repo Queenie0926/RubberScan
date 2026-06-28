@@ -14,6 +14,7 @@ composeBom = "2026.02.01"
 materialIcons = "1.7.8"
 navigationCompose = "2.9.8"
 cameraCore = "1.6.1"
+espressoCoreVersion = "3.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +41,7 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCoreVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
