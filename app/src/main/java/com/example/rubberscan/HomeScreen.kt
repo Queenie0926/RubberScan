@@ -13,6 +13,8 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +80,7 @@ data class RecentInspection(
 
 // ── Home Screen ────────────────────────────────────────────
 @Composable
-fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "") {
+fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleViewModel: BleViewModel? = null) {
 
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
@@ -97,11 +99,21 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "") {
 
     )
 
+    val bleState      by (bleViewModel?.bleState      ?: kotlinx.coroutines.flow.MutableStateFlow(BleState.IDLE)).collectAsState()
+    val bleTemp       by (bleViewModel?.temperature   ?: kotlinx.coroutines.flow.MutableStateFlow<Float?>(null)).collectAsState()
+    val bleHumidity   by (bleViewModel?.humidity      ?: kotlinx.coroutines.flow.MutableStateFlow<Float?>(null)).collectAsState()
+    val bleName       by (bleViewModel?.connectedName ?: kotlinx.coroutines.flow.MutableStateFlow("")).collectAsState()
+
+    val isConnected   = bleState == BleState.CONNECTED
+    val tempText      = if (bleTemp != null) "%.1f°C".format(bleTemp) else "—"
+    val humText       = if (bleHumidity != null) "%.1f%%".format(bleHumidity) else "—"
+    val connSubtitle  = if (isConnected) bleName.ifBlank { "RubberSense" } else "Not paired"
+
     val statusCards = listOf(
-        StatusCardData(Icons.Default.Wifi,       "Sensor Connection", "Connected", "ESP32-RubberSense", GreenDark,  GreenLight),
-        StatusCardData(Icons.Default.Thermostat, "Temperature",       "28.4°C",   "Normal range",      OrangeDark, OrangeLight),
-        StatusCardData(Icons.Default.WaterDrop,  "Humidity",          "72%",      "Moderate",          BlueDark,   BlueLight),
-        StatusCardData(Icons.Default.Warning,    "Disease Risk",      "Low",      "Monitor daily",     GreenMid,   Color(0xFFF9FBE7))
+        StatusCardData(Icons.Default.Bluetooth,  "Sensor Connection", if (isConnected) "Connected" else "Disconnected", connSubtitle, if (isConnected) GreenDark else GreenMid, GreenLight),
+        StatusCardData(Icons.Default.Thermostat, "Temperature",       tempText,    if (bleTemp != null) "Normal range" else "Pair sensor first", OrangeDark, OrangeLight),
+        StatusCardData(Icons.Default.WaterDrop,  "Humidity",          humText,     if (bleHumidity != null) "Moderate" else "Pair sensor first",  BlueDark,   BlueLight),
+        StatusCardData(Icons.Default.Warning,    "Disease Risk",      "Low",       "Monitor daily",     GreenMid,   Color(0xFFF9FBE7))
     )
 
     val recentInspections = listOf(

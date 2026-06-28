@@ -25,6 +25,7 @@ private val bottomNavRoutes = setOf(
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
+    private val bleViewModel: BleViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,8 +66,6 @@ class MainActivity : ComponentActivity() {
                         composable("welcome") {
                             WelcomeScreen(
                                 onGetStarted = { nav.navigate("onboarding") },
-                                onLogin      = { nav.navigate("login") },
-                                onRegister   = { nav.navigate("signup") },
                                 onGuest      = { nav.navigate("home") {
                                     popUpTo("welcome") { inclusive = true }
                                 }}
@@ -101,8 +100,9 @@ class MainActivity : ComponentActivity() {
 
                         composable("home") {
                             HomeScreen(
-                                onNavigate = { route -> nav.navigate(route) },
-                                userName = currentUser?.name ?: ""
+                                onNavigate   = { route -> nav.navigate(route) },
+                                userName     = currentUser?.name ?: "",
+                                bleViewModel = bleViewModel
                             )
                         }
 
@@ -167,7 +167,10 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("ble-pairing") {
-                            BLEPairingScreen(onBack = { nav.popBackStack() })
+                            BLEPairingScreen(
+                                viewModel = bleViewModel,
+                                onBack    = { nav.popBackStack() }
+                            )
                         }
 
                         composable("profile") {

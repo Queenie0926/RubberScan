@@ -50,7 +50,7 @@ import kotlin.time.Duration.Companion.milliseconds
 private const val TAG = "BLEPairing"
 
 // ── BLE constants (must match ESP32 firmware) ─────────────────────────────
-private const val TARGET_DEVICE_NAME = "RubberSense"
+const val TARGET_DEVICE_NAME = "RubberSense"
 val SERVICE_UUID: UUID       = UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
 val SENSOR_CHAR_UUID: UUID   = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")
 val CLIENT_CONFIG_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
@@ -68,39 +68,19 @@ data class BleDevice(
 // ── Screen ────────────────────────────────────────────────────────────────
 @SuppressLint("MissingPermission")
 @Composable
-fun BLEPairingScreen(onBack: () -> Unit = {}) {
-    val context     = LocalContext.current
-    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+fun BLEPairingScreen(viewModel: BleViewModel, onBack: () -> Unit = {}) {
+    val context = LocalContext.current
 
-    // Use MutableState refs directly so BLE callbacks can capture a stable reference
-    val bleStateMut      = remember { mutableStateOf(BleState.IDLE) }
-    val foundDevicesMut  = remember { mutableStateOf<List<BleDevice>>(emptyList()) }
-    val connectedNameMut = remember { mutableStateOf("") }
-    val temperatureMut   = remember { mutableStateOf<Float?>(null) }
-    val humidityMut      = remember { mutableStateOf<Float?>(null) }
-    val statusMsgMut     = remember { mutableStateOf("Tap 'Scan for Devices' to find your sensor") }
-    val toastMsgMut      = remember { mutableStateOf("") }
-    val gattRef          = remember { mutableStateOf<BluetoothGatt?>(null) }
+    val bleState     by viewModel.bleState.collectAsState()
+    val foundDevices by viewModel.foundDevices.collectAsState()
+    val connectedName by viewModel.connectedName.collectAsState()
+    val temperature  by viewModel.temperature.collectAsState()
+    val humidity     by viewModel.humidity.collectAsState()
+    val statusMsg    by viewModel.statusMsg.collectAsState()
+    val toastMsg     by viewModel.toastMsg.collectAsState()
 
-    val bleState     by bleStateMut
-    val foundDevices  = foundDevicesMut.value
-    val connectedName = connectedNameMut.value
-    val temperature   = temperatureMut.value
-    val humidity      = humidityMut.value
-    val statusMsg     = statusMsgMut.value
-    val toastMsg      = toastMsgMut.value
-
-    val scope     = rememberCoroutineScope()
     val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     val btAdapter = btManager.adapter
-
-    fun showToast(msg: String) {
-        toastMsgMut.value = msg
-        scope.launch {
-            kotlinx.coroutines.delay(2_000)
-            toastMsgMut.value = ""
-        }
-    }
 
     // ── Permissions ───────────────────────────────────────────────────────
     val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -110,157 +90,24 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
     }
 
     var hasPermissions by remember {
-        mutableStateOf(
-            requiredPermissions.all {
-                ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-            }
-        )
+        mutableStateOf(requiredPermissions.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        })
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         hasPermissions = results.values.all { it }
-        if (!hasPermissions) {
-            Log.w(TAG, "Bluetooth permissions denied by user")
-            bleStateMut.value  = BleState.ERROR
-            showToast("Bluetooth permission is required to scan for sensors.")
-        }
+        if (!hasPermissions) viewModel.onPermissionDenied()
     }
 
     val enableBtLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        if (btAdapter?.isEnabled != true) {
-            Log.w(TAG, "Bluetooth not enabled by user")
-            bleStateMut.value = BleState.ERROR
-            showToast("Please turn on Bluetooth to pair your sensor.")
-        }
+        if (btAdapter?.isEnabled != true) viewModel.onBluetoothNotEnabled()
     }
 
-    // ── Permission helper (safe to call from any thread) ──────────────────
-    fun hasPerm(perm: String) =
-        ContextCompat.checkSelfPermission(context, perm) == PackageManager.PERMISSION_GRANTED
-
-    fun canScan() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || hasPerm(Manifest.permission.BLUETOOTH_SCAN)
-    fun canConnect() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || hasPerm(Manifest.permission.BLUETOOTH_CONNECT)
-
-    // ── GATT callback ─────────────────────────────────────────────────────
-    val gattCallback = remember {
-        object : BluetoothGattCallback() {
-            override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
-                mainHandler.post {
-                    when (newState) {
-                        BluetoothProfile.STATE_CONNECTED -> {
-                            Log.d(TAG, "Connected to GATT server, discovering services...")
-                            bleStateMut.value  = BleState.CONNECTED
-                            statusMsgMut.value = "Discovering sensor services..."
-                            if (canConnect()) g.discoverServices()
-                        }
-                        BluetoothProfile.STATE_DISCONNECTED -> {
-                            Log.d(TAG, "Disconnected from GATT server (status=$status)")
-                            bleStateMut.value    = BleState.DISCONNECTED
-                            statusMsgMut.value   = "Sensor disconnected. Tap scan to reconnect."
-                            temperatureMut.value = null
-                            humidityMut.value    = null
-                            g.close()
-                            gattRef.value = null
-                        }
-                    }
-                }
-            }
-
-            override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
-                if (status != BluetoothGatt.GATT_SUCCESS || !canConnect()) return
-                val char = g.getService(SERVICE_UUID)?.getCharacteristic(SENSOR_CHAR_UUID) ?: run {
-                    Log.e(TAG, "Sensor service or characteristic not found on device")
-                    mainHandler.post { showToast("Sensor service not found on this device.") }
-                    return
-                }
-                @Suppress("DEPRECATION")
-                g.setCharacteristicNotification(char, true)
-                @Suppress("DEPRECATION")
-                val descriptor = char.getDescriptor(CLIENT_CONFIG_UUID)
-                if (descriptor != null) {
-                    @Suppress("DEPRECATION")
-                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    @Suppress("DEPRECATION")
-                    g.writeDescriptor(descriptor)
-                }
-                Log.d(TAG, "Notifications enabled — receiving live sensor data")
-                mainHandler.post { statusMsgMut.value = "Receiving live data from your sensor." }
-            }
-
-            private fun handleSensorData(bytes: ByteArray) {
-                val json = bytes.toString(Charsets.UTF_8)
-                val t = Regex(""""t":([\d.]+)""").find(json)?.groupValues?.get(1)?.toFloatOrNull()
-                val h = Regex(""""h":([\d.]+)""").find(json)?.groupValues?.get(1)?.toFloatOrNull()
-                Log.d(TAG, "Sensor data received: t=$t, h=$h")
-                mainHandler.post {
-                    if (t != null) temperatureMut.value = t
-                    if (h != null) humidityMut.value    = h
-                }
-            }
-
-            @Deprecated("Deprecated in Java")
-            @Suppress("DEPRECATION")
-            override fun onCharacteristicChanged(g: BluetoothGatt, char: BluetoothGattCharacteristic) {
-                handleSensorData(char.value ?: return)
-            }
-
-            // API 33+
-            override fun onCharacteristicChanged(g: BluetoothGatt, char: BluetoothGattCharacteristic, value: ByteArray) {
-                handleSensorData(value)
-            }
-        }
-    }
-
-    // ── Scan callback ─────────────────────────────────────────────────────
-    val scanCallback = remember {
-        object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                val name = if (canConnect()) result.device.name ?: "Unknown" else "Unknown"
-                val entry = BleDevice(name, result.device.address, result.rssi, result.device)
-                mainHandler.post {
-                    foundDevicesMut.value = (foundDevicesMut.value.filter { it.address != entry.address } + entry)
-                        .sortedByDescending { if (it.name.contains(TARGET_DEVICE_NAME)) 1000 else it.rssi }
-                }
-            }
-            override fun onScanFailed(errorCode: Int) {
-                Log.e(TAG, "BLE scan failed with error code: $errorCode")
-                mainHandler.post {
-                    bleStateMut.value = BleState.ERROR
-                    showToast("Scan failed. Please try again.")
-                }
-            }
-        }
-    }
-
-    // Auto-stop scan after 12 seconds
-    LaunchedEffect(bleState) {
-        if (bleState == BleState.SCANNING) {
-            kotlinx.coroutines.delay(12_000L.milliseconds)
-            if (bleStateMut.value == BleState.SCANNING) {
-                if (canScan()) btAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-                bleStateMut.value  = BleState.IDLE
-                statusMsgMut.value = if (foundDevicesMut.value.isEmpty())
-                    "Tap 'Scan for Devices' to find your sensor"
-                else "Tap a device below to connect"
-                Log.d(TAG, "Scan timed out. Devices found: ${foundDevicesMut.value.size}")
-                if (foundDevicesMut.value.isEmpty()) showToast("No devices found. Make sure your sensor is on.")
-            }
-        }
-    }
-
-    // Cleanup on screen leave
-    DisposableEffect(Unit) {
-        onDispose {
-            if (canScan()) btAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-            gattRef.value?.let { if (canConnect()) it.disconnect(); it.close() }
-        }
-    }
-
-    // ── Actions ───────────────────────────────────────────────────────────
     fun startScan() {
         if (!hasPermissions) { permissionLauncher.launch(requiredPermissions); return }
         if (btAdapter?.isEnabled != true) {
@@ -268,33 +115,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
             enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return
         }
-        foundDevicesMut.value = emptyList()
-        bleStateMut.value     = BleState.SCANNING
-        statusMsgMut.value    = "Looking for nearby sensors..."
-        Log.d(TAG, "Starting BLE scan...")
-        if (canScan()) btAdapter.bluetoothLeScanner?.startScan(scanCallback)
-    }
-
-    fun stopScan() {
-        if (canScan()) btAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-        bleStateMut.value  = BleState.IDLE
-        statusMsgMut.value = "Tap 'Scan for Devices' to find your sensor"
-        Log.d(TAG, "Scan stopped by user")
-    }
-
-    fun connectTo(device: BleDevice) {
-        stopScan()
-        bleStateMut.value      = BleState.CONNECTING
-        connectedNameMut.value = device.name
-        statusMsgMut.value     = "Connecting to ${device.name}..."
-        Log.d(TAG, "Connecting to ${device.name} (${device.address})...")
-        if (canConnect()) {
-            gattRef.value = device.device.connectGatt(context, false, gattCallback)
-        }
-    }
-
-    fun disconnect() {
-        if (canConnect()) gattRef.value?.disconnect()
+        viewModel.startScan()
     }
 
     // ── UI ────────────────────────────────────────────────────────────────
@@ -347,7 +168,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                 LiveSensorCard(temperature, humidity)
                 Spacer(Modifier.weight(1f))
                 OutlinedButton(
-                    onClick = { disconnect() },
+                    onClick = { viewModel.disconnect() },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color(0xFFC62828)
@@ -373,7 +194,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                             device      = device,
                             isTarget    = device.name.contains(TARGET_DEVICE_NAME, ignoreCase = true),
                             isConnecting = bleState == BleState.CONNECTING,
-                            onClick     = { connectTo(device) }
+                            onClick     = { viewModel.connectTo(device, context) }
                         )
                     }
                 } else if (bleState == BleState.IDLE || bleState == BleState.ERROR) {
@@ -383,7 +204,7 @@ fun BLEPairingScreen(onBack: () -> Unit = {}) {
                 ScanButton(
                     bleState = bleState,
                     onScan   = { startScan() },
-                    onStop   = { stopScan() }
+                    onStop   = { viewModel.stopScan() }
                 )
             }
 

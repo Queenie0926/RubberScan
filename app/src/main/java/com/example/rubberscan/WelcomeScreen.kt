@@ -25,8 +25,6 @@ import androidx.compose.ui.res.painterResource
 @Composable
 fun WelcomeScreen(
     onGetStarted: () -> Unit,
-    onLogin: () -> Unit = {},
-    onRegister: () -> Unit = {},
     onGuest: () -> Unit
 ) {
 
