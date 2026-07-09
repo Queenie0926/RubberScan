@@ -44,7 +44,7 @@ data class DiseaseResult(
     val desc: String
 )
 
-enum class ResultType { HEALTHY, PLFD, CLF, MILDEW }
+enum class ResultType { HEALTHY, PLFD, ANTHRACNOSE, ALGAL, MILDEW, UNIDENTIFIED, NOT_RUBBER }
 
 // ── Sample results data ───────────────────────────────────
 private fun getResultData(type: ResultType): DiseaseResult = when (type) {
@@ -72,17 +72,29 @@ private fun getResultData(type: ResultType): DiseaseResult = when (type) {
         icon = Icons.Default.Warning,
         desc = "Leaf spots with gray-brown centers and dark margins. Premature leaf drop may occur."
     )
-    ResultType.CLF -> DiseaseResult(
-        name = "Corynespora Leaf Fall Disease",
-        confidence = 82,
-        severity = "Severe",
-        color = Color(0xFFC62828),
-        bg = Color(0xFFFFEBEE),
-        badge = "CLF",
-        badgeColor = Color(0xFFC62828),
-        badgeBg = Color(0xFFFFCDD2),
-        icon = Icons.Default.Error,
-        desc = "Characteristic fish-bone pattern on leaves. Rapid defoliation possible. Immediate treatment required."
+    ResultType.ANTHRACNOSE -> DiseaseResult(
+        name = "Anthracnose Leaf Spot",
+        confidence = 85,
+        severity = "Moderate",
+        color = Color(0xFF6D4C41),
+        bg = Color(0xFFEFEBE9),
+        badge = "Anthracnose",
+        badgeColor = Color(0xFF6D4C41),
+        badgeBg = Color(0xFFD7CCC8),
+        icon = Icons.Default.Warning,
+        desc = "Brown sunken spots with yellow halos and tip dieback. Spreads in warm, humid conditions."
+    )
+    ResultType.ALGAL -> DiseaseResult(
+        name = "Algal Leaf Spot",
+        confidence = 87,
+        severity = "Mild",
+        color = Color(0xFF00838F),
+        bg = Color(0xFFE0F7FA),
+        badge = "Algal",
+        badgeColor = Color(0xFF00838F),
+        badgeBg = Color(0xFFB2EBF2),
+        icon = Icons.Default.Warning,
+        desc = "Circular raised velvety grey-green to rust-orange spots. Caused by a parasitic green alga in humid areas."
     )
     ResultType.MILDEW -> DiseaseResult(
         name = "Oidium Powdery Mildew",
@@ -96,6 +108,30 @@ private fun getResultData(type: ResultType): DiseaseResult = when (type) {
         icon = Icons.Default.Warning,
         desc = "White powdery coating on young leaves. Affects photosynthesis. Early intervention recommended."
     )
+    ResultType.UNIDENTIFIED -> DiseaseResult(
+        name = "Unidentified",
+        confidence = 0,
+        severity = "—",
+        color = Color(0xFF616161),
+        bg = Color(0xFFF5F5F5),
+        badge = "Unknown",
+        badgeColor = Color(0xFF616161),
+        badgeBg = Color(0xFFE0E0E0),
+        icon = Icons.Default.HelpOutline,
+        desc = "We couldn't confidently identify a disease. Please retake a clear, well-lit photo of a single rubber leaf that fills the frame."
+    )
+    ResultType.NOT_RUBBER -> DiseaseResult(
+        name = "Not a Rubber Leaf",
+        confidence = 0,
+        severity = "—",
+        color = Color(0xFF8D6E63),
+        bg = Color(0xFFF5F0EE),
+        badge = "Invalid",
+        badgeColor = Color(0xFF8D6E63),
+        badgeBg = Color(0xFFE0D6D2),
+        icon = Icons.Default.ImageNotSupported,
+        desc = "This doesn't appear to be a rubber tree leaf. Please point the camera at a single rubber leaf and scan again."
+    )
 }
 
 // ── Result Screen ──────────────────────────────────────────
@@ -106,6 +142,7 @@ fun ResultScreen(
     result: ResultType = ResultType.PLFD
 ) {
     val data = getResultData(result)
+    val isUncertain = result == ResultType.UNIDENTIFIED || result == ResultType.NOT_RUBBER
     val dateFormat = remember { SimpleDateFormat("MMMM d, yyyy", Locale.US) }
     val today = remember { dateFormat.format(Date()) }
 
@@ -198,75 +235,80 @@ fun ResultScreen(
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Confidence bar
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Confidence Level", color = Color(0xFF757575), fontSize = 12.sp)
-                            Text("${data.confidence}%", fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp, color = data.color)
-                        }
-                        Spacer(Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(10.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(Color(0xFFF0F0F0))
-                        ) {
+                        // Confidence bar (only for identified results)
+                        if (!isUncertain) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Confidence Level", color = Color(0xFF757575), fontSize = 12.sp)
+                                Text("${data.confidence}%", fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp, color = data.color)
+                            }
+                            Spacer(Modifier.height(6.dp))
                             Box(
                                 modifier = Modifier
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(confidenceProgress)
+                                    .fillMaxWidth()
+                                    .height(10.dp)
                                     .clip(RoundedCornerShape(50))
-                                    .background(data.color)
-                            )
-                        }
+                                    .background(Color(0xFFF0F0F0))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(confidenceProgress)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(data.color)
+                                )
+                            }
 
-                        Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(16.dp))
+                        }
 
                         Text(data.desc, color = Color(0xFF666666),
                             fontSize = 13.sp, lineHeight = 20.sp)
 
-                        Spacer(Modifier.height(16.dp))
-                        HorizontalDivider(color = Color(0xFFF0F0F0))
-                        Spacer(Modifier.height(16.dp))
+                        // Severity / Date row (only for identified results)
+                        if (!isUncertain) {
+                            Spacer(Modifier.height(16.dp))
+                            HorizontalDivider(color = Color(0xFFF0F0F0))
+                            Spacer(Modifier.height(16.dp))
 
-                        // Severity / Date row
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text("Severity", color = Color(0xFF9E9E9E), fontSize = 11.sp)
-                                Spacer(Modifier.height(4.dp))
-                                Surface(shape = RoundedCornerShape(8.dp), color = data.bg) {
-                                    Text(data.severity, color = data.color,
-                                        fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Severity", color = Color(0xFF9E9E9E), fontSize = 11.sp)
+                                    Spacer(Modifier.height(4.dp))
+                                    Surface(shape = RoundedCornerShape(8.dp), color = data.bg) {
+                                        Text(data.severity, color = data.color,
+                                            fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                    }
                                 }
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .height(36.dp)
-                                    .background(Color(0xFFF0F0F0))
-                            )
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text("Detection Date", color = Color(0xFF9E9E9E), fontSize = 11.sp)
-                                Spacer(Modifier.height(4.dp))
-                                Text(today, fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp, color = Color(0xFF424242))
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.dp)
+                                        .height(36.dp)
+                                        .background(Color(0xFFF0F0F0))
+                                )
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Detection Date", color = Color(0xFF9E9E9E), fontSize = 11.sp)
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(today, fontWeight = FontWeight.Medium,
+                                        fontSize = 11.sp, color = Color(0xFF424242))
+                                }
                             }
                         }
                     }
                 }
             }
 
+            if (!isUncertain) {
             // ── Leaf Image Card ───────────────────────────────
             Card(
                 shape = RoundedCornerShape(24.dp),
@@ -345,6 +387,25 @@ fun ResultScreen(
                         fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Icon(Icons.Default.ChevronRight, contentDescription = null,
                         tint = Color.White, modifier = Modifier.size(18.dp))
+                }
+            }
+            } else {
+                // ── Uncertain result: single Scan Again action ────
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFF1B5E20))
+                        .clickable { onNavigate("scan") }
+                        .padding(vertical = 16.dp, horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = null,
+                        tint = Color.White, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Scan Again", color = Color.White,
+                        fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 

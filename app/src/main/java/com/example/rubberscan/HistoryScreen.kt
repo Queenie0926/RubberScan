@@ -40,13 +40,13 @@ private val sampleRecords = listOf(
     InspectionRecord(1, "Jun 9, 2026",  "09:14 AM", "Healthy", "None",     "28.2°C", "70%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
     InspectionRecord(2, "Jun 8, 2026",  "02:30 PM", "PLFD",    "Mild",     "29.1°C", "74%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🍂"),
     InspectionRecord(3, "Jun 7, 2026",  "11:05 AM", "Healthy", "None",     "27.8°C", "68%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
-    InspectionRecord(4, "Jun 6, 2026",  "08:50 AM", "CLF",     "Moderate", "30.3°C", "82%", Color(0xFFE65100), Color(0xFFFFF3E0), "🍁"),
+    InspectionRecord(4, "Jun 6, 2026",  "08:50 AM", "Anthracnose",     "Moderate", "30.3°C", "82%", Color(0xFF6D4C41), Color(0xFFEFEBE9), "🍁"),
     InspectionRecord(5, "Jun 5, 2026",  "03:15 PM", "Powdery Mildew",  "Mild",     "28.7°C", "65%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🌫️"),
-    InspectionRecord(6, "Jun 4, 2026",  "10:30 AM", "Healthy", "None",     "26.9°C", "69%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
+    InspectionRecord(6, "Jun 4, 2026",  "10:30 AM", "Algal",   "Mild",     "29.5°C", "85%", Color(0xFF00838F), Color(0xFFE0F7FA), "🟢"),
     InspectionRecord(7, "Jun 3, 2026",  "09:00 AM", "PLFD",    "Severe",   "31.2°C", "88%", Color(0xFFC62828), Color(0xFFFFEBEE), "🍂")
 )
 
-private val filters = listOf("All", "Healthy", "PLFD", "CLF", "Powdery Mildew")
+private val filters = listOf("All", "Healthy", "PLFD", "Anthracnose", "Algal", "Powdery Mildew")
 
 // ── History Screen ─────────────────────────────────────────
 @Composable

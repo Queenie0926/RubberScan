@@ -63,26 +63,49 @@ private val diseaseList = listOf(
         )
     ),
     DiseaseInfo(
-        id = "clf",
-        name = "Corynespora LFD",
-        shortName = "CLF",
-        color = Color(0xFFC62828),
-        bg = Color(0xFFFFEBEE),
+        id = "anthracnose",
+        name = "Anthracnose Leaf Spot",
+        shortName = "Anthracnose",
+        color = Color(0xFF6D4C41),
+        bg = Color(0xFFEFEBE9),
         emoji = "🍁",
-        severity = "Severe",
-        prevalence = "Epidemic Risk",
+        severity = "Moderate–Severe",
+        prevalence = "Common",
         symptoms = listOf(
-            "Fish-bone vein necrosis pattern",
-            "Rapid leaf wilting and abscission",
-            "Dark water-soaked lesions",
-            "Stem cankers in severe cases"
+            "Brown to dark sunken spots with yellow halos",
+            "Leaf tip dieback and blackening",
+            "Distortion of young expanding leaves",
+            "Spots enlarge and merge in wet weather"
         ),
-        causes = "Caused by Corynespora cassiicola. Highly contagious. Can devastate entire blocks.",
+        causes = "Caused by Colletotrichum spp. Spreads via rain splash and wind during warm, humid conditions.",
         actions = listOf(
-            "Quarantine affected zones",
-            "Apply systemic fungicides",
-            "Consult plantation technician immediately",
-            "Report to DA"
+            "Apply copper- or mancozeb-based fungicide",
+            "Prune and remove infected leaves",
+            "Improve air circulation in canopy",
+            "Avoid overhead watering"
+        )
+    ),
+    DiseaseInfo(
+        id = "algal",
+        name = "Algal Leaf Spot",
+        shortName = "Algal",
+        color = Color(0xFF00838F),
+        bg = Color(0xFFE0F7FA),
+        emoji = "🟢",
+        severity = "Mild–Moderate",
+        prevalence = "Humid Areas",
+        symptoms = listOf(
+            "Circular raised velvety grey-green spots",
+            "Spots turn rust-orange with age",
+            "Crusty dark centers on older lesions",
+            "Mostly on upper leaf surface"
+        ),
+        causes = "Caused by the parasitic green alga Cephaleuros virescens. Favored by warm, humid, stagnant-air conditions.",
+        actions = listOf(
+            "Apply copper-based fungicide",
+            "Prune to improve air flow and light",
+            "Reduce canopy humidity",
+            "Remove heavily infected leaves"
         )
     ),
     DiseaseInfo(

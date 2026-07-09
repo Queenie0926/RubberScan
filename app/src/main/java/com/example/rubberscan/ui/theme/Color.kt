@@ -19,7 +19,7 @@ val PageBg        = Color(0xFFF1F8F1)   // shared page background across all scr
 val CardBg        = Color(0xFFFFFFFF)   // card / surface white
 
 // ── Oranges / Amber ───────────────────────────────────────────
-val OrangeDark    = Color(0xFFE65100)   // temperature icon, CLF, warning primary
+val OrangeDark    = Color(0xFFE65100)   // temperature icon, warning primary
 val OrangeMid     = Color(0xFFFF9800)   // PLFD badge, progress dots
 val AmberDark     = Color(0xFFF9A825)   // mild severity, early-warning icon
 val OrangeLight   = Color(0xFFFFF3E0)   // orange element backgrounds
