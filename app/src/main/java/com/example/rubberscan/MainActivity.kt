@@ -177,9 +177,16 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("scan") {
+                            val temperature by bleViewModel.temperature.collectAsState()
+                            val humidity by bleViewModel.humidity.collectAsState()
+                            val bleState by bleViewModel.bleState.collectAsState()
+
                             ScanScreen(
-                                onBack    = { nav.popBackStack() },
-                                onCapture = { nav.navigate("processing") }
+                                onBack = { nav.popBackStack() },
+                                onCapture = { nav.navigate("processing") },
+                                temperature = temperature,
+                                humidity = humidity,
+                                isSensorConnected = bleState == BleState.CONNECTED
                             )
                         }
 

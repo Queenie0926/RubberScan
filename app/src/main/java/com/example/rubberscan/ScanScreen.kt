@@ -21,6 +21,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,7 +37,7 @@ import androidx.compose.ui.graphics.PathEffect
 import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,15 +46,27 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import java.io.File
 import java.util.concurrent.Executors
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 
 // ── Scan Screen ────────────────────────────────────────────
 @Composable
 fun ScanScreen(
     onBack: () -> Unit = {},
-    onCapture: () -> Unit = {}
+    onCapture: () -> Unit = {},
+    temperature: Float? = null,       // ← from DHT22 via ESP32 BLE
+    humidity: Float? = null,          // ← null means "no reading yet"
+    isSensorConnected: Boolean = false
+
 ) {
     val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+// format for display, with a fallback when nothing has arrived yet
+    val tempText     = temperature?.let { "%.1f°C".format(it) } ?: "--°C"
+    val humidityText = humidity?.let { "${it.toInt()}% RH" } ?: "--% RH"
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -123,10 +136,11 @@ fun ScanScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Default.Wifi, contentDescription = null,
-                        tint = Color(0xFF4CAF50), modifier = Modifier.size(14.dp))
+                        tint = if (isSensorConnected) Color(0xFF4CAF50) else Color(0xFFE57373),
+                        modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Sensor Connected", color = Color.White,
-                        fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Text(if (isSensorConnected) "Sensor Connected" else "Sensor Offline",
+                        color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
 
                 Box(
@@ -150,13 +164,13 @@ fun ScanScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.Black.copy(alpha = 0.5f))
-                        .padding(12.dp),
+                        .padding(2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Default.Thermostat, contentDescription = null,
                         tint = Color(0xFFFF9800), modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("28.4°C", color = Color.White,
+                    Text(tempText, color = Color.White,
                         fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
 
                     Spacer(Modifier.width(12.dp))
@@ -167,7 +181,7 @@ fun ScanScreen(
                     Icon(Icons.Default.WaterDrop, contentDescription = null,
                         tint = Color(0xFF64B5F6), modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("72% RH", color = Color.White,
+                    Text(humidityText, color = Color.White,
                         fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
 
                     Spacer(Modifier.width(12.dp))
@@ -188,16 +202,16 @@ fun ScanScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Bottom
             ) {
                 Box(
-                    modifier = Modifier.size(256.dp, 176.dp),
+                    modifier = Modifier.size(260.dp, 360.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     LeafGuideOverlay()
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(18.dp))
 
                 Column(
                     modifier = Modifier
@@ -208,20 +222,21 @@ fun ScanScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Place a rubber leaf inside the guide frame.",
-                        color = Color.White, fontSize = 13.sp,
+                        color = Color.White, fontSize = 10.sp,
                         fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(1.dp))
                     Text("Hold steady for best results",
                         color = Color(0xFFBDBDBD), fontSize = 11.sp,
                         textAlign = TextAlign.Center)
                 }
+                Spacer(Modifier.height(32.dp))
             }
 
             // ── Capture Button ────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 48.dp),
+                    .padding(bottom = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -433,3 +448,4 @@ fun LeafGuideOverlay() {
         )
     }
 }
+

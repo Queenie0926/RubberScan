@@ -24,11 +24,35 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Color as AndroidColor
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import java.io.File
+import java.io.OutputStream
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 
 
 // ── History Detail Screen ───────────────────────────────────
 @Composable
 fun HistoryDetailScreen(onBack: () -> Unit = {}) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isExporting by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -231,18 +255,52 @@ fun HistoryDetailScreen(onBack: () -> Unit = {}) {
 
             // ── Export Button ──────────────────────────────────
             Button(
-                onClick = { },
+                onClick = {
+                    if (!isExporting) {
+                        isExporting = true
+                        scope.launch {
+                            exportScanReportPdf(
+                                context = context,
+                                disease = "Pestalotiopsis LFD (PLFD)",
+                                severity = "Mild",
+                                confidence = "88%",
+                                temperature = "29.1°C",
+                                humidity = "74%",
+                                dateTime = "Jun 8, 2026 · 02:30 PM",
+                                location = "Marilog District – Block B",
+                                recommendation = "Apply copper-based fungicide. Remove fallen leaves. Schedule re-inspection in 7 days."
+                            )
+                            delay(800)
+                            isExporting = false
+                        }
+                    }
+                },
+                enabled = !isExporting,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0D47A1)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0D47A1),
+                    disabledContainerColor = Color(0xFF0D47A1).copy(alpha = 0.6f)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
             ) {
-                Icon(Icons.Default.Download, contentDescription = null,
-                    tint = Color.White, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Export PDF Report", color = Color.White,
-                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                if (isExporting) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Exporting…", color = Color.White,
+                        fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                } else {
+                    Icon(Icons.Default.Download, contentDescription = null,
+                        tint = Color.White, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Export PDF Report", color = Color.White,
+                        fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
 
             Spacer(Modifier.height(8.dp))
@@ -322,5 +380,110 @@ fun LeafIllustration() {
         drawLine(veinAlpha, Offset(w * 0.5f, h * 0.1f), Offset(w * 0.1f, h * 0.5f), strokeWidth = 1.5f)
         drawLine(veinAlpha, Offset(w * 0.5f, h * 0.1f), Offset(w * 0.9f, h * 0.48f), strokeWidth = 1.5f)
         drawLine(veinAlpha, Offset(w * 0.5f, h * 0.1f), Offset(w * 0.5f, h * 0.88f), strokeWidth = 1.5f)
+    }
+}
+// ── PDF Export ──────────────────────────────────────────────
+// ── PDF Export ──────────────────────────────────────────────
+suspend fun exportScanReportPdf(
+    context: Context,
+    disease: String,
+    severity: String,
+    confidence: String,
+    temperature: String,
+    humidity: String,
+    dateTime: String,
+    location: String,
+    recommendation: String
+) {
+    val document = PdfDocument()
+    val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create()
+    val page = document.startPage(pageInfo)
+    val canvas = page.canvas
+
+    val titlePaint = Paint().apply {
+        color = AndroidColor.parseColor("#1B5E20")
+        textSize = 24f; isFakeBoldText = true; isAntiAlias = true
+    }
+    val labelPaint = Paint().apply {
+        color = AndroidColor.DKGRAY; textSize = 12f; isAntiAlias = true
+    }
+    val valuePaint = Paint().apply {
+        color = AndroidColor.BLACK; textSize = 14f; isFakeBoldText = true; isAntiAlias = true
+    }
+    val bodyPaint = Paint().apply {
+        color = AndroidColor.BLACK; textSize = 13f; isAntiAlias = true
+    }
+    val linePaint = Paint().apply { color = AndroidColor.LTGRAY; strokeWidth = 1f }
+
+    val leftMargin = 40f
+    var y = 60f
+
+    canvas.drawText("RubberScan Report", leftMargin, y, titlePaint)
+    y += 20f
+    canvas.drawText("Rubber Tree Disease Assessment", leftMargin, y, labelPaint)
+    y += 20f
+    canvas.drawLine(leftMargin, y, 595 - leftMargin, y, linePaint)
+    y += 40f
+
+    fun drawRow(label: String, value: String) {
+        canvas.drawText(label, leftMargin, y, labelPaint)
+        canvas.drawText(value, leftMargin, y + 18f, valuePaint)
+        y += 50f
+    }
+
+    drawRow("Date & Time", dateTime)
+    drawRow("Location", location)
+    drawRow("Detected Disease", disease)
+    drawRow("Severity Grade", severity)
+    drawRow("Confidence", confidence)
+    drawRow("Temperature", temperature)
+    drawRow("Humidity", humidity)
+
+    // Recommendation (wraps to multiple lines)
+    y += 10f
+    canvas.drawText("Recommendation", leftMargin, y, labelPaint)
+    y += 20f
+    val maxWidth = 595 - (leftMargin * 2)
+    var line = ""
+    for (word in recommendation.split(" ")) {
+        val test = if (line.isEmpty()) word else "$line $word"
+        if (bodyPaint.measureText(test) > maxWidth) {
+            canvas.drawText(line, leftMargin, y, bodyPaint)
+            y += 18f
+            line = word
+        } else {
+            line = test
+        }
+    }
+    if (line.isNotEmpty()) canvas.drawText(line, leftMargin, y, bodyPaint)
+
+    document.finishPage(page)
+
+    val fileName = "RubberScan_Report_${System.currentTimeMillis()}.pdf"
+    withContext(Dispatchers.IO) {
+        try {
+            val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                uri?.let { context.contentResolver.openOutputStream(it) }
+            } else {
+                val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                File(dir, fileName).outputStream()
+            }
+            outputStream?.use { document.writeTo(it) }
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Saved to Downloads: $fileName", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        } finally {
+            document.close()
+        }
     }
 }
