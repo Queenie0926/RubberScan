@@ -27,11 +27,8 @@ data class InspectionRecord(
     val date: String,
     val time: String,
     val result: String,
-    val severity: String,
-    val temp: String,
-    val humidity: String,
     val color: Color,
-    val bg: Color,
+    val bg: Color
 )
 
 // ── Sample data ────────────────────────────────────────────
@@ -41,11 +38,8 @@ private val sampleRecords = listOf(
         date = "Jun 9, 2026",
         time = "09:14 AM",
         result = "Healthy",
-        severity = "None",
-        temp = "28.2°C",
-        humidity = "70%",
         color = Color(0xFF1B5E20),
-        bg = Color(0xFFE8F5E9),
+        bg = Color(0xFFE8F5E9)
     ),
 
     InspectionRecord(
@@ -53,11 +47,8 @@ private val sampleRecords = listOf(
         date = "Jun 8, 2026",
         time = "02:30 PM",
         result = "PLFD",
-        severity = "Mild",
-        temp = "29.1°C",
-        humidity = "74%",
         color = Color(0xFFE65100),
-        bg = Color(0xFFFFF3E0),
+        bg = Color(0xFFFFF3E0)
     ),
 
     InspectionRecord(
@@ -65,11 +56,8 @@ private val sampleRecords = listOf(
         date = "Jun 7, 2026",
         time = "11:05 AM",
         result = "Healthy",
-        severity = "None",
-        temp = "27.8°C",
-        humidity = "68%",
         color = Color(0xFF1B5E20),
-        bg = Color(0xFFE8F5E9),
+        bg = Color(0xFFE8F5E9)
     ),
 
     InspectionRecord(
@@ -77,11 +65,8 @@ private val sampleRecords = listOf(
         date = "Jun 6, 2026",
         time = "08:50 AM",
         result = "Anthracnose",
-        severity = "Moderate",
-        temp = "30.3°C",
-        humidity = "82%",
         color = Color(0xFF00B7EB),
-        bg = Color(0xFFEFEBE9),
+        bg = Color(0xFFEFEBE9)
     ),
 
     InspectionRecord(
@@ -89,11 +74,8 @@ private val sampleRecords = listOf(
         date = "Jun 5, 2026",
         time = "03:15 PM",
         result = "Powdery Mildew",
-        severity = "Mild",
-        temp = "28.7°C",
-        humidity = "65%",
         color = Color(0xFFFE0056),
-        bg = Color(0xFFFFFDE7),
+        bg = Color(0xFFFFFDE7)
     ),
 
     InspectionRecord(
@@ -101,11 +83,8 @@ private val sampleRecords = listOf(
         date = "Jun 4, 2026",
         time = "10:30 AM",
         result = "Algal",
-        severity = "Mild",
-        temp = "29.5°C",
-        humidity = "85%",
         color = Color(0xFF00FFCE),
-        bg = Color(0xFFE0F7FA),
+        bg = Color(0xFFE0F7FA)
     ),
 
     InspectionRecord(
@@ -113,11 +92,8 @@ private val sampleRecords = listOf(
         date = "Jun 3, 2026",
         time = "09:00 AM",
         result = "PLFD",
-        severity = "Severe",
-        temp = "31.2°C",
-        humidity = "88%",
         color = Color(0xFFE65100),
-        bg = Color(0xFFFFF3E0),
+        bg = Color(0xFFFFF3E0)
     ),
 
     InspectionRecord(
@@ -125,11 +101,8 @@ private val sampleRecords = listOf(
         date = "Jun 2, 2026",
         time = "01:20 PM",
         result = "Unidentified",
-        severity = "N/A",
-        temp = "—",
-        humidity = "—",
         color = Color(0xFF616161),
-        bg = Color(0xFFF0F0F0),
+        bg = Color(0xFFF0F0F0)
     )
 )
 
@@ -274,10 +247,15 @@ fun StatCard(value: String, label: String, valueColor: Color, modifier: Modifier
 
 // ── Inspection Record Row ───────────────────────────────────
 @Composable
-fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
+fun InspectionRecordRow(
+    record: InspectionRecord,
+    onClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
+        colors = CardDefaults.cardColors(
+            containerColor = CardBg
+        ),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -287,10 +265,9 @@ fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Emoji thumbnail
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(52.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(record.bg),
                 contentAlignment = Alignment.Center
@@ -299,77 +276,57 @@ fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
                     painter = painterResource(R.drawable.leaf),
                     contentDescription = record.result,
                     tint = record.color,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             }
 
             Spacer(Modifier.width(12.dp))
 
-            // Info
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = record.result,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Color(0xFF1C1C1C),
+                    maxLines = 1
+                )
+
+                Spacer(Modifier.height(4.dp))
+
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(record.result,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = Color(0xFF1C1C1C))
-                    Text(record.time,
-                        color = TextMuted,
-                        fontSize = 11.sp)
-                }
-                Text(record.date,
-                    color = TextMuted,
-                    fontSize = 11.sp)
-                Spacer(Modifier.height(6.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Temperature
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Icon(Icons.Default.Thermostat,
-                            contentDescription = null,
-                            tint = Color(0xFFE65100),
-                            modifier = Modifier.size(13.dp))
-                        Text(record.temp,
-                            fontSize = 11.sp,
-                            color = Color(0xFF666666))
-                    }
-                    // Humidity
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Icon(Icons.Default.WaterDrop,
-                            contentDescription = null,
-                            tint = Color(0xFF0D47A1),
-                            modifier = Modifier.size(13.dp))
-                        Text(record.humidity,
-                            fontSize = 11.sp,
-                            color = Color(0xFF666666))
-                    }
-                    // Severity badge
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = record.bg
-                    ) {
-                        Text(record.severity,
-                            color = record.color,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(
-                                horizontal = 8.dp, vertical = 3.dp))
-                    }
+                    Text(
+                        text = record.date,
+                        color = TextMuted,
+                        fontSize = 11.sp
+                    )
+
+                    Text(
+                        text = "  •  ",
+                        color = Color(0xFFB0B0B0),
+                        fontSize = 11.sp
+                    )
+
+                    Text(
+                        text = record.time,
+                        color = TextMuted,
+                        fontSize = 11.sp
+                    )
                 }
             }
 
-            Spacer(Modifier.width(4.dp))
-            Icon(Icons.Default.ChevronRight,
-                contentDescription = null,
+            Spacer(Modifier.width(8.dp))
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "View inspection details",
                 tint = Color(0xFFD1D5DB),
-                modifier = Modifier.size(18.dp))
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
-

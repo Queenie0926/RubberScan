@@ -1,6 +1,7 @@
 package com.example.rubberscan
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,33 +10,46 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import com.example.rubberscan.ui.theme.*
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.rubberscan.ui.theme.CardBg
+import com.example.rubberscan.ui.theme.GreenDark
+import com.example.rubberscan.ui.theme.PageBg
+import com.example.rubberscan.ui.theme.TextMuted
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
+// RiskLevel is expected to be defined in DiseaseRisk.kt:
+//
+// enum class RiskLevel {
+//     LOW,
+//     MODERATE,
+//     HIGH,
+//     UNKNOWN
+// }
 
-// ── Data models ────────────────────────────────────────────
-// RiskLevel is defined in DiseaseRisk.kt (shared: LOW, MODERATE, HIGH, UNKNOWN)
-
+// ── Risk configuration ─────────────────────────────────────
 private data class RiskConfig(
     val label: String,
     val color: Color,
     val bg: Color,
-    val percent: Float   // 0f–100f
+    val percent: Float
 )
 
-private data class Condition(
-    val icon: ImageVector,
-    val iconTint: Color,
+// ── Temperature/Humidity data ──────────────────────────────
+private data class EnvironmentalCondition(
+    val iconRes: Int,
     val iconBg: Color,
     val label: String,
     val value: String,
@@ -44,87 +58,160 @@ private data class Condition(
     val barPercent: Float
 )
 
-private data class ClimateRiskItem(
-    val emoji: String,
-    val factor: String,
-    val risk: String
-)
+// ── Risk configuration mapper ──────────────────────────────
+private fun riskConfigFor(
+    level: RiskLevel
+): RiskConfig {
+    return when (level) {
+        RiskLevel.LOW -> RiskConfig(
+            label = "Low Risk",
+            color = Color(0xFF1B5E20),
+            bg = Color(0xFFE8F5E9),
+            percent = 28f
+        )
 
-// ── Static data ────────────────────────────────────────────
-private fun riskConfigFor(level: RiskLevel) = when (level) {
-    RiskLevel.LOW      -> RiskConfig("Low Risk",      Color(0xFF1B5E20), Color(0xFFE8F5E9), 28f)
-    RiskLevel.MODERATE -> RiskConfig("Moderate Risk", Color(0xFFE65100), Color(0xFFFFF3E0), 58f)
-    RiskLevel.HIGH     -> RiskConfig("High Risk",     Color(0xFFC62828), Color(0xFFFFEBEE), 85f)
-    RiskLevel.UNKNOWN  -> RiskConfig("No Data Yet",   Color(0xFF757575), Color(0xFFF5F5F5), 0f)
+        RiskLevel.MODERATE -> RiskConfig(
+            label = "Moderate Risk",
+            color = Color(0xFFE65100),
+            bg = Color(0xFFFFF3E0),
+            percent = 58f
+        )
+
+        RiskLevel.HIGH -> RiskConfig(
+            label = "High Risk",
+            color = Color(0xFFC62828),
+            bg = Color(0xFFFFEBEE),
+            percent = 85f
+        )
+
+        RiskLevel.UNKNOWN -> RiskConfig(
+            label = "No Data Yet",
+            color = Color(0xFF757575),
+            bg = Color(0xFFF5F5F5),
+            percent = 0f
+        )
+    }
 }
 
-private val conditions = listOf(
-    Condition(
-        icon = Icons.Default.Thermostat,
-        iconTint = Color(0xFFE65100),
+// ── Determine temperature status ───────────────────────────
+private fun temperatureCondition(
+    temperature: Float?
+): EnvironmentalCondition {
+    if (temperature == null) {
+        return EnvironmentalCondition(
+            iconRes = R.drawable.temperature,
+            iconBg = Color(0xFFF5F5F5),
+            label = "Temperature",
+            value = "—",
+            status = "No sensor data",
+            statusColor = Color(0xFF757575),
+            barPercent = 0f
+        )
+    }
+
+    val isNormal = temperature in 23f..30f
+
+    return EnvironmentalCondition(
+        iconRes = R.drawable.temperature,
         iconBg = Color(0xFFFFF3E0),
         label = "Temperature",
-        value = "28.4°C",
-        status = "Normal",
-        statusColor = Color(0xFF1B5E20),
-        barPercent = 57f
-    ),
-    Condition(
-        icon = Icons.Default.WaterDrop,
-        iconTint = Color(0xFF0D47A1),
+        value = "%.1f°C".format(temperature),
+        status = if (isNormal) "Normal" else "At Risk",
+        statusColor = if (isNormal) {
+            Color(0xFF1B5E20)
+        } else {
+            Color(0xFFC62828)
+        },
+        barPercent = ((temperature / 40f) * 100f)
+            .coerceIn(0f, 100f)
+    )
+}
+
+// ── Determine humidity status ──────────────────────────────
+private fun humidityCondition(
+    humidity: Float?
+): EnvironmentalCondition {
+    if (humidity == null) {
+        return EnvironmentalCondition(
+            iconRes = R.drawable.humidity,
+            iconBg = Color(0xFFF5F5F5),
+            label = "Humidity",
+            value = "—",
+            status = "No sensor data",
+            statusColor = Color(0xFF757575),
+            barPercent = 0f
+        )
+    }
+
+    val isNormal = humidity in 60f..80f
+
+    return EnvironmentalCondition(
+        iconRes = R.drawable.humidity,
         iconBg = Color(0xFFE3F2FD),
         label = "Humidity",
-        value = "72%",
-        status = "Elevated",
-        statusColor = Color(0xFFE65100),
-        barPercent = 72f
-    ),
-    Condition(
-        icon = Icons.Default.Air,
-        iconTint = Color(0xFF546E7A),
-        iconBg = Color(0xFFECEFF1),
-        label = "Airflow",
-        value = "2.4 m/s",
-        status = "Low",
-        statusColor = Color(0xFFE65100),
-        barPercent = 24f
-    ),
-    Condition(
-        icon = Icons.Default.WbSunny,
-        iconTint = Color(0xFFF9A825),
-        iconBg = Color(0xFFFFFDE7),
-        label = "UV Index",
-        value = "6.2",
-        status = "Moderate",
-        statusColor = Color(0xFFE65100),
-        barPercent = 62f
+        value = "%.1f%%".format(humidity),
+        status = if (isNormal) "Normal" else "At Risk",
+        statusColor = if (isNormal) {
+            Color(0xFF1B5E20)
+        } else {
+            Color(0xFFC62828)
+        },
+        barPercent = humidity.coerceIn(0f, 100f)
     )
-)
+}
 
-private val climateRisks = listOf(
-    ClimateRiskItem("💧", "High humidity",      "Favors fungal disease spread"),
-    ClimateRiskItem("🌬️", "Low airflow",        "Reduces leaf drying time"),
-    ClimateRiskItem("🌡️", "Temperature range",  "Within disease development range"),
-)
-
-// ── Screen ─────────────────────────────────────────────────
+// ── Reusable risk summary ──────────────────────────────────
 @Composable
-fun EnvironmentalRiskScreen(onBack: () -> Unit = {}) {
-    val riskLevel = RiskLevel.MODERATE
+fun EnvironmentalRiskSummary(
+    riskLevel: RiskLevel = RiskLevel.MODERATE,
+    temperature: Float? = 28.4f,
+    humidity: Float? = 72f
+) {
     val config = riskConfigFor(riskLevel)
 
+    val conditions = listOf(
+        temperatureCondition(temperature),
+        humidityCondition(humidity)
+    )
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        RiskMeterCard(
+            config = config
+        )
+
+        ConditionsGrid(
+            conditions = conditions
+        )
+    }
+}
+
+// ── Full Environmental Risk Screen ─────────────────────────
+@Composable
+fun EnvironmentalRiskScreen(
+    onBack: () -> Unit = {},
+    riskLevel: RiskLevel = RiskLevel.MODERATE,
+    temperature: Float? = 28.4f,
+    humidity: Float? = 72f
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(PageBg)
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
+                .padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 20.dp,
+                    bottom = 20.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -132,19 +219,23 @@ fun EnvironmentalRiskScreen(onBack: () -> Unit = {}) {
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.15f))
-                    .clickable { onBack() },
+                    .clickable {
+                        onBack()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.ChevronLeft,
+                    imageVector = Icons.Default.ChevronLeft,
                     contentDescription = "Back",
                     tint = Color.White,
                     modifier = Modifier.size(22.dp)
                 )
             }
+
             Spacer(Modifier.width(12.dp))
+
             Text(
-                "Environmental Risk",
+                text = "Environmental Risk",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
@@ -152,98 +243,134 @@ fun EnvironmentalRiskScreen(onBack: () -> Unit = {}) {
         }
 
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-            // ── Risk Meter Card ──────────────────────────────
-            RiskMeterCard(config = config)
-
-            // ── Conditions Grid ──────────────────────────────
-            ConditionsGrid(conditions = conditions)
-
-            // ── Climate Risk Summary ─────────────────────────
-            ClimateRiskSummaryCard(items = climateRisks)
+            EnvironmentalRiskSummary(
+                riskLevel = riskLevel,
+                temperature = temperature,
+                humidity = humidity
+            )
 
             Spacer(Modifier.height(8.dp))
         }
     }
 }
 
-// ── Risk Meter Card ────────────────────────────────────────
+// ── Disease Risk Meter ─────────────────────────────────────
 @Composable
-private fun RiskMeterCard(config: RiskConfig) {
-    // Animate the thumb position (0f–1f fraction of track width)
+private fun RiskMeterCard(
+    config: RiskConfig
+) {
     val thumbFraction by animateFloatAsState(
         targetValue = config.percent / 100f,
-        animationSpec = tween(durationMillis = 800, delayMillis = 300),
+        animationSpec = tween(
+            durationMillis = 800,
+            delayMillis = 300
+        ),
         label = "riskThumb"
     )
 
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
+        colors = CardDefaults.cardColors(
+            containerColor = CardBg
+        ),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            // Title + badge row
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Disease Risk Level",
-                    fontWeight = FontWeight.SemiBold,
+                    text = "Disease Risk Level",
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = 14.sp,
                     color = Color(0xFF424242)
                 )
+
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = config.color
+                    color = config.bg
                 ) {
                     Text(
-                        config.label,
-                        color = Color.White,
+                        text = config.label,
+                        color = config.color,
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(
+                            horizontal = 12.dp,
+                            vertical = 4.dp
+                        )
                     )
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // Track + thumb
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val trackWidthPx = constraints.maxWidth.toFloat()
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val trackWidthPx =
+                    constraints.maxWidth.toFloat()
 
-                // Segmented track
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(20.dp)
                         .clip(RoundedCornerShape(50))
                 ) {
-                    Box(Modifier.weight(1f).fillMaxHeight().background(Color(0xFFA5D6A7)))
-                    Box(Modifier.weight(1f).fillMaxHeight().background(Color(0xFFFFF176)))
-                    Box(Modifier.weight(1f).fillMaxHeight().background(Color(0xFFFFCC80)))
-                    Box(Modifier.weight(1f).fillMaxHeight().background(Color(0xFFEF9A9A)))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(Color(0xFFA5D6A7))
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(Color(0xFFFFF176))
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(Color(0xFFFFCC80))
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(Color(0xFFEF9A9A))
+                    )
                 }
 
-                // Animated thumb
-                val thumbOffsetDp = with(androidx.compose.ui.platform.LocalDensity.current) {
-                    (trackWidthPx * thumbFraction - 10.dp.toPx()).toDp()
+                val density = LocalDensity.current
+
+                val thumbOffsetDp = with(density) {
+                    (
+                            trackWidthPx * thumbFraction -
+                                    10.dp.toPx()
+                            ).toDp()
                 }
+
                 Box(
                     modifier = Modifier
-                        .offset(x = thumbOffsetDp, y = 0.dp)
+                        .offset(
+                            x = thumbOffsetDp,
+                            y = 0.dp
+                        )
                         .size(20.dp)
                         .clip(CircleShape)
                         .background(config.color)
-                        .then(
-                            Modifier.clip(CircleShape)
-                        )
                 ) {
                     Box(
                         modifier = Modifier
@@ -255,99 +382,132 @@ private fun RiskMeterCard(config: RiskConfig) {
                 }
             }
 
-            // Labels
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Low",      color = TextMuted, fontSize = 11.sp)
-                Text("Moderate", color = TextMuted, fontSize = 11.sp)
-                Text("High",     color = TextMuted, fontSize = 11.sp)
-            }
-        }
-    }
-}
+                Text(
+                    text = "Low",
+                    color = TextMuted,
+                    fontSize = 11.sp
+                )
 
-// ── Conditions Grid ────────────────────────────────────────
-@Composable
-private fun ConditionsGrid(conditions: List<Condition>) {
-    // 2-column grid via chunked rows
-    conditions.chunked(2).forEach { rowItems ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            rowItems.forEach { condition ->
-                ConditionCard(
-                    condition = condition,
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = "Moderate",
+                    color = TextMuted,
+                    fontSize = 11.sp
+                )
+
+                Text(
+                    text = "High",
+                    color = TextMuted,
+                    fontSize = 11.sp
                 )
             }
-            // Fill empty slot if odd count
-            if (rowItems.size < 2) Spacer(Modifier.weight(1f))
         }
     }
 }
 
-// ── Condition Card ─────────────────────────────────────────
+// ── Temperature and Humidity Grid ──────────────────────────
 @Composable
-private fun ConditionCard(condition: Condition, modifier: Modifier = Modifier) {
+private fun ConditionsGrid(
+    conditions: List<EnvironmentalCondition>
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        conditions.forEach { condition ->
+            ConditionCard(
+                condition = condition,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+// ── Temperature/Humidity Card ──────────────────────────────
+@Composable
+private fun ConditionCard(
+    condition: EnvironmentalCondition,
+    modifier: Modifier = Modifier
+) {
     val animatedBar by animateFloatAsState(
         targetValue = condition.barPercent / 100f,
-        animationSpec = tween(durationMillis = 700, delayMillis = 200),
+        animationSpec = tween(
+            durationMillis = 700,
+            delayMillis = 200
+        ),
         label = "bar_${condition.label}"
     )
 
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = CardBg
+        ),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = modifier
+            .height(160.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Icon + label
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(condition.iconBg),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        condition.icon,
-                        contentDescription = null,
-                        tint = condition.iconTint,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                Text(condition.label, color = TextMuted, fontSize = 11.sp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(condition.iconBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(condition.iconRes),
+                    contentDescription = condition.label,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(26.dp)
+                )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
-            // Value
+            // Label
             Text(
-                condition.value,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color(0xFF1C1C1C)
+                text = condition.label,
+                color = TextMuted,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            // Main value
+            Text(
+                text = condition.value,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 20.sp,
+                color = Color(0xFF1C1C1C),
+                maxLines = 1
             )
 
             // Status
             Text(
-                condition.status,
+                text = condition.status,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = condition.statusColor
+                fontWeight = FontWeight.SemiBold,
+                color = condition.statusColor,
+                maxLines = 1
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.weight(1f))
 
-            // Progress bar track
+            // Progress bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -359,80 +519,9 @@ private fun ConditionCard(condition: Condition, modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .fillMaxWidth(animatedBar)
                         .fillMaxHeight()
+                        .clip(RoundedCornerShape(50))
                         .background(condition.statusColor)
                 )
-            }
-        }
-    }
-}
-
-// ── Climate Risk Summary Card ──────────────────────────────
-@Composable
-private fun ClimateRiskSummaryCard(items: List<ClimateRiskItem>) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(1.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFE0B2)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFFFF3E0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = OrangeDark,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    "Climate Risk Summary",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Color(0xFF1C1C1C)
-                )
-            }
-
-            // Risk items
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items.forEach { item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFFFF8F0))
-                            .padding(10.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Text(item.emoji, fontSize = 16.sp)
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                item.factor,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = Color(0xFF1C1C1C)
-                            )
-                            Text(
-                                item.risk,
-                                fontSize = 11.sp,
-                                color = TextMuted
-                            )
-                        }
-                    }
-                }
             }
         }
     }
