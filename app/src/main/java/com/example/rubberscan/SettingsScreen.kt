@@ -40,6 +40,10 @@ fun SettingsScreen(
     var storageUsed         by remember { mutableStateOf(getStorageUsed(context)) }
     var showClearDialog     by remember { mutableStateOf(false) }
     var showClearedNotif    by remember { mutableStateOf(false) }
+    val packageInfo = remember {
+        context.packageManager.getPackageInfo(context.packageName, 0)
+    }
+    val appVersion = remember { packageInfo.versionName ?: "1.0.0" }
 
     // ── Clear records confirmation dialog ────────────────
     if (showClearDialog) {
@@ -161,7 +165,7 @@ fun SettingsScreen(
                         iconTint = GreenDark,
                         iconBg   = GreenLight,
                         label    = "App Version",
-                        info     = "1.0.0"
+                        info     = appVersion
                     )
                     HorizontalDivider(color = BorderGray)
                     SettingsEmojiNavRow(
