@@ -43,10 +43,12 @@ private val sampleRecords = listOf(
     InspectionRecord(4, "Jun 6, 2026",  "08:50 AM", "Anthracnose",     "Moderate", "30.3°C", "82%", Color(0xFF6D4C41), Color(0xFFEFEBE9), "🍁"),
     InspectionRecord(5, "Jun 5, 2026",  "03:15 PM", "Powdery Mildew",  "Mild",     "28.7°C", "65%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🌫️"),
     InspectionRecord(6, "Jun 4, 2026",  "10:30 AM", "Algal",   "Mild",     "29.5°C", "85%", Color(0xFF00838F), Color(0xFFE0F7FA), "🟢"),
-    InspectionRecord(7, "Jun 3, 2026",  "09:00 AM", "PLFD",    "Severe",   "31.2°C", "88%", Color(0xFFC62828), Color(0xFFFFEBEE), "🍂")
+    InspectionRecord(7, "Jun 3, 2026",  "09:00 AM", "PLFD",    "Severe",   "31.2°C", "88%", Color(0xFFC62828), Color(0xFFFFEBEE), "🍂"),
+    InspectionRecord(8, "Jun 2, 2026", "01:20 PM", result   = "Unidentified", severity = "N/A", temp = "—", humidity = "—", color    = Color(0xFF616161), bg = Color(0xFFF0F0F0), emoji    = "❓")
 )
 
-private val filters = listOf("All", "Healthy", "PLFD", "Anthracnose", "Algal", "Powdery Mildew")
+
+private val filters = listOf("All", "Healthy", "PLFD", "Anthracnose", "Algal", "Powdery Mildew", "Unidentified")
 
 // ── History Screen ─────────────────────────────────────────
 @Composable
@@ -59,9 +61,10 @@ fun HistoryScreen(
     val filtered = if (activeFilter == "All") sampleRecords
     else sampleRecords.filter { it.result == activeFilter }
 
-    val healthyCount  = sampleRecords.count { it.result == "Healthy" }
-    val diseaseCount  = sampleRecords.count { it.result != "Healthy" }
-    val totalCount    = sampleRecords.size
+    val healthyCount      = sampleRecords.count { it.result == "Healthy" }
+    val diseaseCount      = sampleRecords.count { it.result != "Healthy" && it.result != "Unidentified" }
+    val unidentifiedCount = sampleRecords.count { it.result == "Unidentified" }
+    val totalCount        = sampleRecords.size
 
     Column(
         modifier = Modifier
@@ -137,14 +140,12 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            StatCard("$healthyCount", "Healthy",
-                Color(0xFF2E7D32), Modifier.weight(1f))
-            StatCard("$diseaseCount", "Disease",
-                Color(0xFFE65100), Modifier.weight(1f))
-            StatCard("$totalCount",  "Total",
-                Color(0xFF37474F), Modifier.weight(1f))
+            StatCard("$healthyCount",      "Healthy", Color(0xFF2E7D32), Modifier.weight(1f))
+            StatCard("$diseaseCount",      "Disease", Color(0xFFE65100), Modifier.weight(1f))
+            StatCard("$unidentifiedCount", "Unclear", Color(0xFF616161), Modifier.weight(1f))
+            StatCard("$totalCount",        "Total",   Color(0xFF37474F), Modifier.weight(1f))
         }
 
         // ── Records List ────────────────────────────────────
