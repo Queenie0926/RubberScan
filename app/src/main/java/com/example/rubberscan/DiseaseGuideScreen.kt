@@ -20,8 +20,12 @@ import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.PaddingValues
 // ── Data model ─────────────────────────────────────────────
 data class DiseaseInfo(
     val id: String,
@@ -29,23 +33,23 @@ data class DiseaseInfo(
     val shortName: String,
     val color: Color,
     val bg: Color,
-    val emoji: String,
     val severity: String,
     val prevalence: String,
     val symptoms: List<String>,
     val causes: String,
-    val actions: List<String>
+    val actions: List<String>,
+    val images: List<Int> = emptyList()
 )
 
 // ── Sample data ────────────────────────────────────────────
 private val diseaseList = listOf(
+
     DiseaseInfo(
         id = "plfd",
-        name = "Pestalotiopsis LFD",
+        name = "Pestalotiopsis Leaf Fall Disease",
         shortName = "PLFD",
         color = Color(0xFFE65100),
         bg = Color(0xFFFFF3E0),
-        emoji = "🍂",
         severity = "Moderate–Severe",
         prevalence = "Common",
         symptoms = listOf(
@@ -60,15 +64,19 @@ private val diseaseList = listOf(
             "Remove fallen leaves immediately",
             "Avoid irrigation at night",
             "Monitor weekly"
+        ),
+        images = listOf(
+            R.drawable.plfd_1,
+            R.drawable.plfd_2,
+            R.drawable.plfd_3
         )
     ),
     DiseaseInfo(
         id = "anthracnose",
         name = "Anthracnose Leaf Spot",
         shortName = "Anthracnose",
-        color = Color(0xFF6D4C41),
+        color = Color(0xFF00B7EB),
         bg = Color(0xFFEFEBE9),
-        emoji = "🍁",
         severity = "Moderate–Severe",
         prevalence = "Common",
         symptoms = listOf(
@@ -83,15 +91,19 @@ private val diseaseList = listOf(
             "Prune and remove infected leaves",
             "Improve air circulation in canopy",
             "Avoid overhead watering"
+        ),
+        images = listOf(
+            R.drawable.anthracnose_1,
+            R.drawable.anthracnose_2,
+            R.drawable.anthracnose_3
         )
     ),
     DiseaseInfo(
         id = "algal",
         name = "Algal Leaf Spot",
         shortName = "Algal",
-        color = Color(0xFF00838F),
+        color = Color(0xFF00FFCE),
         bg = Color(0xFFE0F7FA),
-        emoji = "🟢",
         severity = "Mild–Moderate",
         prevalence = "Humid Areas",
         symptoms = listOf(
@@ -106,15 +118,19 @@ private val diseaseList = listOf(
             "Prune to improve air flow and light",
             "Reduce canopy humidity",
             "Remove heavily infected leaves"
+        ),
+        images = listOf(
+            R.drawable.algal_1,
+            R.drawable.algal_2,
+            R.drawable.algal_3
         )
     ),
     DiseaseInfo(
         id = "mildew",
         name = "Oidium Powdery Mildew",
         shortName = "Mildew",
-        color = Color(0xFFF9A825),
+        color = Color(0xFFFE0056),
         bg = Color(0xFFFFFDE7),
-        emoji = "🌫️",
         severity = "Mild–Moderate",
         prevalence = "Seasonal",
         symptoms = listOf(
@@ -128,15 +144,19 @@ private val diseaseList = listOf(
             "Apply sulfur-based fungicide",
             "Spray young foliage early morning",
             "Improve air circulation"
+        ),
+        images = listOf(
+            R.drawable.powdery_1,
+            R.drawable.powdery_2,
+            R.drawable.powdery_3
         )
     ),
     DiseaseInfo(
         id = "healthy",
-        name = "Healthy Leaf Reference",
+        name = "Healthy Leaf",
         shortName = "Healthy",
         color = Color(0xFF1B5E20),
         bg = Color(0xFFE8F5E9),
-        emoji = "🌿",
         severity = "None",
         prevalence = "Reference",
         symptoms = listOf(
@@ -150,9 +170,35 @@ private val diseaseList = listOf(
             "Continue regular monitoring",
             "Maintain plantation hygiene",
             "Record baseline data"
+        ),
+        images = listOf(
+            R.drawable.healthy_1,
+            R.drawable.healthy_2,
+            R.drawable.healthy_3
         )
     )
 )
+
+private fun severityDotColor(severity: String): Color = when {
+    severity.contains("Severe", true)   -> Color(0xFFE53935) // red
+    severity.contains("Moderate", true) -> Color(0xFFFB8C00) // orange
+    severity.contains("Mild", true)     -> Color(0xFFFDD835) // yellow
+    severity.equals("None", true)       -> Color(0xFF43A047) // green
+    else                                -> Color(0xFF9E9E9E)
+}
+
+@Composable
+private fun StatBlock(label: String, value: String, dotColor: Color) {
+    Column {
+        Text(label, color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(9.dp).clip(CircleShape).background(dotColor))
+            Spacer(Modifier.width(6.dp))
+            Text(value, color = Color(0xFF333333), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+}
 
 // ── Disease Guide Screen ───────────────────────────────────
 @Composable
@@ -267,7 +313,12 @@ fun DiseaseListItem(disease: DiseaseInfo, onClick: () -> Unit) {
                     .background(disease.bg),
                 contentAlignment = Alignment.Center
             ) {
-                Text(disease.emoji, fontSize = 24.sp)
+                Icon(
+                    painter = painterResource(R.drawable.leaf),
+                    contentDescription = disease.shortName,
+                    tint = disease.color,          // ← recolors per disease automatically
+                    modifier = Modifier.size(32.dp)
+                )
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -306,7 +357,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
+                .padding(20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -317,12 +368,17 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
                         .clickable { onBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = "Back",
+                    Icon(Icons.Default.ChevronLeft, "Back",
                         tint = Color.White, modifier = Modifier.size(22.dp))
                 }
                 Spacer(Modifier.width(12.dp))
-                Text("Disease Information", color = Color.White,
-                    fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    disease.name,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
             }
         }
 
@@ -330,7 +386,13 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header card
+            // ── Image carousel ──
+            DiseaseImageCarousel(
+                images = disease.images,
+                accentColor = disease.color
+            )
+
+            // ── Severity + Prevalence ──
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = CardBg),
@@ -338,35 +400,17 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(disease.bg),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(disease.emoji, fontSize = 30.sp)
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    Column {
-                        Surface(shape = RoundedCornerShape(50), color = disease.color) {
-                            Text(disease.shortName, color = Color.White,
-                                fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        Text(disease.name, fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp, color = Color(0xFF1C1C1C))
-                        Text("Severity: ${disease.severity} · ${disease.prevalence}",
-                            color = TextMuted, fontSize = 11.sp)
-                    }
+                    StatBlock("Severity", disease.severity, severityDotColor(disease.severity))
+                    StatBlock("Prevalence", disease.prevalence, Color(0xFFFB8C00))
                 }
             }
 
-            // Symptoms card
+            // ── Symptoms ──
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = CardBg),
@@ -382,12 +426,11 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
                             verticalAlignment = Alignment.Top,
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 7.dp)
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(disease.color)
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = disease.color,
+                                modifier = Modifier.size(16.dp).padding(top = 1.dp)
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(symptom, color = Color(0xFF555555), fontSize = 13.sp)
@@ -396,7 +439,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
                 }
             }
 
-            // Causes card
+            // ── Causes ──
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = disease.bg),
@@ -412,7 +455,7 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
                 }
             }
 
-            // Actions card
+            // ── Recommended Actions ──
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = CardBg),
@@ -446,6 +489,62 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             }
 
             Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+@Composable
+fun DiseaseImageCarousel(
+    images: List<Int>,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    if (images.isEmpty()) return
+
+    val pagerState = rememberPagerState(pageCount = { images.size })
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            // peek + gap gives the "more images beside" carousel feel
+            contentPadding = PaddingValues(horizontal = if (images.size > 1) 20.dp else 0.dp),
+            pageSpacing = 12.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) { page ->
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+            ) {
+                Image(
+                    painter = painterResource(images[page]),
+                    contentDescription = "Reference image ${page + 1}",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
+        if (images.size > 1) {
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                repeat(images.size) { index ->
+                    val selected = pagerState.currentPage == index
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (selected) 10.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(if (selected) accentColor else Color(0xFFD0D0D0))
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("Swipe to view more images", color = TextMuted, fontSize = 12.sp)
         }
     }
 }
