@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 
 
 // ── Data models ────────────────────────────────────────────
-private enum class RiskLevel { LOW, MODERATE, HIGH }
+// RiskLevel is defined in DiseaseRisk.kt (shared: LOW, MODERATE, HIGH, UNKNOWN)
 
 private data class RiskConfig(
     val label: String,
@@ -55,6 +55,7 @@ private fun riskConfigFor(level: RiskLevel) = when (level) {
     RiskLevel.LOW      -> RiskConfig("Low Risk",      Color(0xFF1B5E20), Color(0xFFE8F5E9), 28f)
     RiskLevel.MODERATE -> RiskConfig("Moderate Risk", Color(0xFFE65100), Color(0xFFFFF3E0), 58f)
     RiskLevel.HIGH     -> RiskConfig("High Risk",     Color(0xFFC62828), Color(0xFFFFEBEE), 85f)
+    RiskLevel.UNKNOWN  -> RiskConfig("No Data Yet",   Color(0xFF757575), Color(0xFFF5F5F5), 0f)
 }
 
 private val conditions = listOf(

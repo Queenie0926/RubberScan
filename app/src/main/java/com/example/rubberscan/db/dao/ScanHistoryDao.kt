@@ -8,7 +8,7 @@ import com.example.rubberscan.db.entity.ScanHistory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ScanHistoryDao {
+interface   ScanHistoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertScan(scan: ScanHistory): Long

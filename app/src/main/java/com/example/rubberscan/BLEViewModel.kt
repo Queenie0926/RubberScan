@@ -57,23 +57,14 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
 
     private var gatt: BluetoothGatt? = null
 
-    // ── Add these properties near the top, after gatt declaration ──
-    private var lastConnectedDevice: BleDevice? = null
-    var autoReconnect: Boolean = false
-    var notificationsEnabled: Boolean = false  // set from SettingsViewModel
-    private var isIntentionalDisconnect = false
-    private var reconnectAttempts = 0
-    private val maxReconnectAttempts = 5
-
-
     // ── Permission helpers ────────────────────────────────────────────────
-    fun hasPerm(perm: String): Boolean =
+    fun hasPerm(perm: String) =
         ContextCompat.checkSelfPermission(getApplication(), perm) == PackageManager.PERMISSION_GRANTED
 
-    fun canScan(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+    fun canScan() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             hasPerm(Manifest.permission.BLUETOOTH_SCAN)
 
-    fun canConnect(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+    fun canConnect() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             hasPerm(Manifest.permission.BLUETOOTH_CONNECT)
 
     // ── Toast (auto-clears after 2 seconds) ──────────────────────────────
@@ -86,7 +77,7 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ── GATT callback ─────────────────────────────────────────────────────
-    private val gattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
+    private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
             mainHandler.post {
                 when (newState) {
@@ -99,51 +90,11 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
                     BluetoothProfile.STATE_DISCONNECTED -> {
                         Log.d(BLE_TAG, "Disconnected from GATT server (status=$status)")
                         _bleState.value    = BleState.DISCONNECTED
+                        _statusMsg.value   = "Sensor disconnected. Tap scan to reconnect."
                         _temperature.value = null
                         _humidity.value    = null
                         g.close()
                         gatt = null
-
-                        val deviceName = _connectedName.value.ifBlank { "Sensor" }
-
-                        val shouldReconnect = autoReconnect
-                                && !isIntentionalDisconnect
-                                && lastConnectedDevice != null
-                                && reconnectAttempts < maxReconnectAttempts
-
-                        if (shouldReconnect) {
-                            reconnectAttempts++
-                            _statusMsg.value = "Sensor disconnected. Reconnecting... (attempt $reconnectAttempts)"
-
-                            // Notify disconnection only on first attempt
-                            if (reconnectAttempts == 1 && notificationsEnabled) {
-                                NotificationHelper.notifySensorDisconnected(getApplication(), deviceName)
-                            }
-
-                            viewModelScope.launch {
-                                delay(3_000)
-                                val device = lastConnectedDevice ?: return@launch
-                                if (_bleState.value != BleState.CONNECTED && canConnect()) {
-                                    _bleState.value = BleState.CONNECTING
-                                    gatt = device.device.connectGatt(getApplication(), false, gattCallback)
-                                }
-                            }
-                        } else {
-                            isIntentionalDisconnect = false
-
-                            if (autoReconnect && reconnectAttempts >= maxReconnectAttempts) {
-                                _statusMsg.value = "Could not reconnect after $maxReconnectAttempts attempts. Tap scan to try again."
-                                if (notificationsEnabled) {
-                                    NotificationHelper.notifyReconnectFailed(getApplication(), deviceName, maxReconnectAttempts)
-                                }
-                            } else {
-                                // Only notify on unexpected disconnect (not intentional)
-                                if (!isIntentionalDisconnect && notificationsEnabled) {
-                                    NotificationHelper.notifySensorDisconnected(getApplication(), deviceName)
-                                }
-                                _statusMsg.value = "Sensor disconnected. Tap scan to reconnect."
-                            }
-                        }
                     }
                 }
             }
@@ -193,7 +144,7 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ── Scan callback ─────────────────────────────────────────────────────
-    private val scanCallback: ScanCallback = object : ScanCallback() {
+    private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val name = if (canConnect()) result.device.name ?: "Unknown" else "Unknown"
             val entry = BleDevice(name, result.device.address, result.rssi, result.device)
@@ -247,8 +198,6 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
         _bleState.value      = BleState.CONNECTING
         _connectedName.value = device.name
         _statusMsg.value     = "Connecting to ${device.name}..."
-        lastConnectedDevice  = device          // ← add this
-        reconnectAttempts    = 0               // ← add this
         Log.d(BLE_TAG, "Connecting to ${device.name} (${device.address})...")
         if (canConnect()) {
             gatt = device.device.connectGatt(context, false, gattCallback)
@@ -256,8 +205,6 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun disconnect() {
-        isIntentionalDisconnect = true    // ← add this
-        reconnectAttempts = 0             // ← add this
         if (canConnect()) gatt?.disconnect()
     }
 
