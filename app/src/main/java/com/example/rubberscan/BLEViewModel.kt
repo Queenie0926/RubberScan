@@ -20,6 +20,8 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.rubberscan.db.AppDatabase
+import com.example.rubberscan.db.entity.SensorReading
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +58,12 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
     val toastMsg: StateFlow<String> = _toastMsg
 
     private var gatt: BluetoothGatt? = null
+
+    // ── Cumulative sensor logging ─────────────────────────────────────────
+    private val sensorDao = AppDatabase.getInstance(app).sensorReadingDao()
+    private var lastLogTime = 0L
+    private val logIntervalMs = 10 * 60 * 1000L          // one row every 10 min
+    private val retentionMs   = 7 * 24 * 60 * 60 * 1000L // keep last 7 days
 
     // ── Permission helpers ────────────────────────────────────────────────
     fun hasPerm(perm: String) =
@@ -129,6 +137,16 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
             mainHandler.post {
                 if (t != null) _temperature.value = t
                 if (h != null) _humidity.value    = h
+            }
+
+            // Throttled cumulative logging: one row every logIntervalMs
+            val now = System.currentTimeMillis()
+            if (t != null && h != null && now - lastLogTime >= logIntervalMs) {
+                lastLogTime = now
+                viewModelScope.launch {
+                    sensorDao.insert(SensorReading(timestamp = now, temperature = t, humidity = h))
+                    sensorDao.deleteOlderThan(now - retentionMs)
+                }
             }
         }
 

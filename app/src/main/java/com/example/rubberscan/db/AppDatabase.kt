@@ -5,19 +5,22 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.rubberscan.db.dao.ScanHistoryDao
+import com.example.rubberscan.db.dao.SensorReadingDao
 import com.example.rubberscan.db.dao.UserDao
 import com.example.rubberscan.db.entity.ScanHistory
+import com.example.rubberscan.db.entity.SensorReading
 import com.example.rubberscan.db.entity.User
 
 @Database(
-    entities = [User::class, ScanHistory::class],
-    version = 1,
+    entities = [User::class, ScanHistory::class, SensorReading::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
     abstract fun scanHistoryDao(): ScanHistoryDao
+    abstract fun sensorReadingDao(): SensorReadingDao
 
     companion object {
         @Volatile
@@ -29,7 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "rubberscan.db"
-                ).build().also { instance = it }
+                ).fallbackToDestructiveMigration().build().also { instance = it }
             }
         }
     }
