@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Calendar
+import androidx.compose.ui.layout.ContentScale
 
 // ── Bottom Nav Item model ───────────────────────────────────
 private data class BottomNavItem(
@@ -40,7 +41,7 @@ private data class BottomNavItem(
 
 // ── Data models ────────────────────────────────────────────
 data class QuickAction(
-    val icon: ImageVector,
+    val iconRes: Int,
     val label: String,
     val iconColor: Color,
     val bgColor: Color,
@@ -48,12 +49,13 @@ data class QuickAction(
 )
 
 data class StatusCardData(
-    val icon: ImageVector,
+    val iconRes: Int,
     val label: String,
     val value: String,
     val sub: String,
     val valueColor: Color,
-    val bgColor: Color
+    val bgColor: Color,
+    val tintIcon: Boolean = false
 )
 
 data class RecentInspection(
@@ -77,12 +79,34 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
     }
 
     val quickActions = listOf(
-        QuickAction(Icons.Default.Bluetooth,        "Pair Sensor",   BlueDark,   BlueLight,   "ble-pairing"),
-        QuickAction(Icons.Default.DocumentScanner, "Scan Leaf",     GreenDark,  GreenLight,  "scan"),
-        QuickAction(Icons.AutoMirrored.Filled.MenuBook,         "Disease Guide", OrangeDark, OrangeLight, "disease-guide"),
-        QuickAction(Icons.Default.History,          "View History",  PurpleDark,   PurpleLight,   "history")
-
-
+        QuickAction(
+            iconRes = R.drawable.bluetooth,
+            label = "Pair Sensor",
+            iconColor = BlueDark,
+            bgColor = BlueLight,
+            route = "ble-pairing"
+        ),
+        QuickAction(
+            iconRes = R.drawable.scanner,
+            label = "Scan Leaf",
+            iconColor = GreenDark,
+            bgColor = GreenLight,
+            route = "scan"
+        ),
+        QuickAction(
+            iconRes = R.drawable.info,
+            label = "Disease Guide",
+            iconColor = OrangeDark,
+            bgColor = OrangeLight,
+            route = "disease-guide"
+        ),
+        QuickAction(
+            iconRes = R.drawable.history,
+            label = "View History",
+            iconColor = PurpleDark,
+            bgColor = PurpleLight,
+            route = "history"
+        )
     )
 
     val bleState      by (bleViewModel?.bleState      ?: kotlinx.coroutines.flow.MutableStateFlow(BleState.IDLE)).collectAsState()
@@ -95,11 +119,85 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
     val humText       = if (bleHumidity != null) "%.1f%%".format(bleHumidity) else "—"
     val connSubtitle  = if (isConnected) bleName.ifBlank { "RubberSense" } else "Not paired"
 
+    val isGoodCondition = true
+    val conditionColor =
+        if (isGoodCondition) Color(0xFF2E7D32)
+        else Color(0xFFC62828)
+
+    val conditionText =
+        if (isGoodCondition) "Good"
+        else "At Risk"
+
+    val diseaseRiskText =
+        if (isGoodCondition) "Low"
+        else "High"
+
+    val diseaseRiskColor =
+        if (isGoodCondition) Color(0xFF2E7D32)
+        else Color(0xFFC62828)
+
+    val diseaseRiskBg =
+        if (isGoodCondition) Color(0xFFE8F5E9)
+        else Color(0xFFFFEBEE)
+
     val statusCards = listOf(
-        StatusCardData(Icons.Default.Bluetooth,  "Sensor Connection", if (isConnected) "Connected" else "Disconnected", connSubtitle, if (isConnected) GreenDark else GreenMid, GreenLight),
-        StatusCardData(Icons.Default.Thermostat, "Temperature",       tempText,    if (bleTemp != null) "Normal range" else "Pair sensor first", OrangeDark, OrangeLight),
-        StatusCardData(Icons.Default.WaterDrop,  "Humidity",          humText,     if (bleHumidity != null) "Moderate" else "Pair sensor first",  BlueDark,   BlueLight),
-        StatusCardData(Icons.Default.Warning,    "Disease Risk",      "Low",       "Monitor daily",     GreenMid,   Color(0xFFF9FBE7))
+        StatusCardData(
+            iconRes = R.drawable.bluetooth,
+            label = "Sensor Connection",
+            value = if (isConnected) "Connected" else "Disconnected",
+            sub = connSubtitle,
+            valueColor = if (isConnected) {
+                Color(0xFF2E7D32)
+            } else {
+                Color(0xFFC62828)
+            },
+            bgColor = if (isConnected) {
+                Color(0xFFE8F5E9)
+            } else {
+                Color(0xFFFFEBEE)
+            },
+            tintIcon = true
+        ),
+
+        StatusCardData(
+            iconRes = R.drawable.temperature,
+            label = "Temperature",
+            value = tempText,
+            sub = if (bleTemp != null) {
+                "Normal range"
+            } else {
+                "Pair sensor first"
+            },
+            valueColor = OrangeDark,
+            bgColor = OrangeLight
+        ),
+
+        StatusCardData(
+            iconRes = R.drawable.humidity,
+            label = "Humidity",
+            value = humText,
+            sub = if (bleHumidity != null) {
+                "Moderate"
+            } else {
+                "Pair sensor first"
+            },
+            valueColor = BlueDark,
+            bgColor = BlueLight
+        ),
+
+        StatusCardData(
+            iconRes = R.drawable.warning,
+            label = "Disease Risk",
+            value = diseaseRiskText,
+            sub = if (isGoodCondition) {
+                "Monitor daily"
+            } else {
+                "Take action"
+            },
+            valueColor = diseaseRiskColor,
+            bgColor = diseaseRiskBg,
+            tintIcon = true
+        )
     )
 
     val recentInspections = listOf(
@@ -174,9 +272,10 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
         }
 
         // ── Plantation Status Card ──────────────────────────
-        Box(modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .offset(y = (-48).dp)
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .offset(y = (-48).dp)
         ) {
             Card(
                 shape = RoundedCornerShape(24.dp),
@@ -184,61 +283,133 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
                 elevation = CardDefaults.cardElevation(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Plantation Status",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp, color = TextPrimary)
-                        Surface(shape = RoundedCornerShape(50), color = GreenLight) {
-                            Text("Low Risk", color = GreenMid,
-                                fontSize = 12.sp, fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                        Text(
+                            text = "Plantation Status",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            color = TextPrimary
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = GreenLight
+                        ) {
+                            Text(
+                                text = "Low Risk",
+                                color = GreenMid,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(
+                                    horizontal = 10.dp,
+                                    vertical = 4.dp
+                                )
+                            )
                         }
                     }
+
                     Spacer(Modifier.height(12.dp))
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Thermostat, contentDescription = null,
-                                tint = OrangeDark, modifier = Modifier.size(20.dp))
-                            Text("28°C", fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp, color = TextPrimary)
-                            Text("Temperature", color = TextMuted, fontSize = 11.sp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.temperature),
+                                contentDescription = "Temperature",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(24.dp)
+                            )
+
+                            Text(
+                                text = "28°C",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = TextPrimary
+                            )
+
+                            Text(
+                                text = "Temperature",
+                                color = TextMuted,
+                                fontSize = 11.sp
+                            )
                         }
-                        HorizontalDivider(modifier = Modifier
-                            .width(1.dp)
-                            .height(48.dp)
-                            .align(Alignment.CenterVertically),
-                            color = BorderGray)
-                        Column(modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.WaterDrop, contentDescription = null,
-                                tint = BlueDark, modifier = Modifier.size(20.dp))
-                            Text("72%", fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp, color = TextPrimary)
-                            Text("Humidity", color = TextMuted, fontSize = 11.sp)
+
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(48.dp)
+                                .align(Alignment.CenterVertically),
+                            color = BorderGray
+                        )
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.humidity),
+                                contentDescription = "Humidity",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(24.dp)
+                            )
+
+                            Text(
+                                text = "72%",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = TextPrimary
+                            )
+
+                            Text(
+                                text = "Humidity",
+                                color = TextMuted,
+                                fontSize = 11.sp
+                            )
                         }
-                        HorizontalDivider(modifier = Modifier
-                            .width(1.dp)
-                            .height(48.dp)
-                            .align(Alignment.CenterVertically),
-                            color = BorderGray)
-                        Column(modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally) {
-                            Spacer(Modifier.height(6.dp))
-                            Box(modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(GreenMid))
-                            Spacer(Modifier.height(4.dp))
-                            Text("Good", fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp, color = TextPrimary)
-                            Text("Conditions", color = TextMuted, fontSize = 11.sp)
+
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(48.dp)
+                                .align(Alignment.CenterVertically),
+                            color = BorderGray
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.record),
+                                contentDescription = conditionText,
+                                contentScale = ContentScale.Fit,
+                                colorFilter = ColorFilter.tint(conditionColor),
+                                modifier = Modifier.size(24.dp)
+                            )
+
+                            Text(
+                                text = conditionText,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = conditionColor
+                            )
+
+                            Text(
+                                text = "Conditions",
+                                color = TextMuted,
+                                fontSize = 11.sp
+                            )
                         }
+
                     }
                 }
             }
@@ -249,7 +420,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
             .padding(horizontal = 16.dp)
             .offset(y = (-36).dp)
         ) {
-            Text("Quick Actions", fontWeight = FontWeight.SemiBold,
+            Text("Quick Actions", fontWeight = FontWeight.Black,
                 fontSize = 15.sp, color = Color(0xFF4A4A4A),
                 modifier = Modifier.padding(bottom = 10.dp))
             Row(
@@ -273,8 +444,12 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
                                 .background(action.iconColor),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(action.icon, contentDescription = action.label,
-                                tint = Color.White, modifier = Modifier.size(20.dp))
+                            Image(
+                                painter = painterResource(action.iconRes),
+                                contentDescription = action.label,
+                                modifier = Modifier.size(22.dp),
+                                colorFilter = ColorFilter.tint(Color.White)
+                            )
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(action.label, fontSize = 10.sp,
@@ -289,7 +464,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
             Spacer(Modifier.height(16.dp))
 
             // ── Sensor Status ───────────────────────────────
-            Text("Sensor Status", fontWeight = FontWeight.SemiBold,
+            Text("Sensor Status", fontWeight = FontWeight.Black,
                 fontSize = 15.sp, color = Color(0xFF4A4A4A),
                 modifier = Modifier.padding(bottom = 10.dp))
             Row(
@@ -316,7 +491,7 @@ fun HomeScreen(onNavigate: (String) -> Unit = {}, userName: String = "", bleView
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Recent Inspections", fontWeight = FontWeight.SemiBold,
+                    Text("Recent Inspections", fontWeight = FontWeight.Black,
                         fontSize = 15.sp, color = Color(0xFF4A4A4A))
                     TextButton(onClick = { onNavigate("history") }) {
                         Text("View all", color = GreenDark,
@@ -420,9 +595,16 @@ fun SensorStatusCard(data: StatusCardData) {
                         .background(data.bgColor),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        data.icon, contentDescription = null,
-                        tint = data.valueColor, modifier = Modifier.size(18.dp)
+                    Image(
+                        painter = painterResource(data.iconRes),
+                        contentDescription = data.label,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = if (data.tintIcon) {
+                            ColorFilter.tint(data.valueColor)
+                        } else {
+                            null
+                        }
                     )
                 }
                 Spacer(Modifier.width(6.dp))
@@ -462,7 +644,12 @@ fun RecentInspectionRow(item: RecentInspection, onClick: () -> Unit) {
                     .background(item.bg),
                 contentAlignment = Alignment.Center
             ) {
-                Text("🍃", fontSize = 18.sp)
+                Icon(
+                    painter = painterResource(R.drawable.leaf),
+                    contentDescription = item.result,
+                    tint = item.color,
+                    modifier = Modifier.size(24.dp)
+                )
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -472,7 +659,7 @@ fun RecentInspectionRow(item: RecentInspection, onClick: () -> Unit) {
             }
             Surface(shape = RoundedCornerShape(50), color = item.bg) {
                 Text(item.confidence, color = item.color,
-                    fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp, fontWeight = FontWeight.Black,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
             }
         }

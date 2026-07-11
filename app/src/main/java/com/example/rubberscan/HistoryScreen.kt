@@ -19,7 +19,7 @@ import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.compose.ui.res.painterResource
 
 // ── Data model ─────────────────────────────────────────────
 data class InspectionRecord(
@@ -32,19 +32,105 @@ data class InspectionRecord(
     val humidity: String,
     val color: Color,
     val bg: Color,
-    val emoji: String
 )
 
 // ── Sample data ────────────────────────────────────────────
 private val sampleRecords = listOf(
-    InspectionRecord(1, "Jun 9, 2026",  "09:14 AM", "Healthy", "None",     "28.2°C", "70%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
-    InspectionRecord(2, "Jun 8, 2026",  "02:30 PM", "PLFD",    "Mild",     "29.1°C", "74%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🍂"),
-    InspectionRecord(3, "Jun 7, 2026",  "11:05 AM", "Healthy", "None",     "27.8°C", "68%", Color(0xFF1B5E20), Color(0xFFE8F5E9), "🌿"),
-    InspectionRecord(4, "Jun 6, 2026",  "08:50 AM", "Anthracnose",     "Moderate", "30.3°C", "82%", Color(0xFF6D4C41), Color(0xFFEFEBE9), "🍁"),
-    InspectionRecord(5, "Jun 5, 2026",  "03:15 PM", "Powdery Mildew",  "Mild",     "28.7°C", "65%", Color(0xFFF9A825), Color(0xFFFFFDE7), "🌫️"),
-    InspectionRecord(6, "Jun 4, 2026",  "10:30 AM", "Algal",   "Mild",     "29.5°C", "85%", Color(0xFF00838F), Color(0xFFE0F7FA), "🟢"),
-    InspectionRecord(7, "Jun 3, 2026",  "09:00 AM", "PLFD",    "Severe",   "31.2°C", "88%", Color(0xFFC62828), Color(0xFFFFEBEE), "🍂"),
-    InspectionRecord(8, "Jun 2, 2026", "01:20 PM", result   = "Unidentified", severity = "N/A", temp = "—", humidity = "—", color    = Color(0xFF616161), bg = Color(0xFFF0F0F0), emoji    = "❓")
+    InspectionRecord(
+        id = 1,
+        date = "Jun 9, 2026",
+        time = "09:14 AM",
+        result = "Healthy",
+        severity = "None",
+        temp = "28.2°C",
+        humidity = "70%",
+        color = Color(0xFF1B5E20),
+        bg = Color(0xFFE8F5E9),
+    ),
+
+    InspectionRecord(
+        id = 2,
+        date = "Jun 8, 2026",
+        time = "02:30 PM",
+        result = "PLFD",
+        severity = "Mild",
+        temp = "29.1°C",
+        humidity = "74%",
+        color = Color(0xFFE65100),
+        bg = Color(0xFFFFF3E0),
+    ),
+
+    InspectionRecord(
+        id = 3,
+        date = "Jun 7, 2026",
+        time = "11:05 AM",
+        result = "Healthy",
+        severity = "None",
+        temp = "27.8°C",
+        humidity = "68%",
+        color = Color(0xFF1B5E20),
+        bg = Color(0xFFE8F5E9),
+    ),
+
+    InspectionRecord(
+        id = 4,
+        date = "Jun 6, 2026",
+        time = "08:50 AM",
+        result = "Anthracnose",
+        severity = "Moderate",
+        temp = "30.3°C",
+        humidity = "82%",
+        color = Color(0xFF00B7EB),
+        bg = Color(0xFFEFEBE9),
+    ),
+
+    InspectionRecord(
+        id = 5,
+        date = "Jun 5, 2026",
+        time = "03:15 PM",
+        result = "Powdery Mildew",
+        severity = "Mild",
+        temp = "28.7°C",
+        humidity = "65%",
+        color = Color(0xFFFE0056),
+        bg = Color(0xFFFFFDE7),
+    ),
+
+    InspectionRecord(
+        id = 6,
+        date = "Jun 4, 2026",
+        time = "10:30 AM",
+        result = "Algal",
+        severity = "Mild",
+        temp = "29.5°C",
+        humidity = "85%",
+        color = Color(0xFF00FFCE),
+        bg = Color(0xFFE0F7FA),
+    ),
+
+    InspectionRecord(
+        id = 7,
+        date = "Jun 3, 2026",
+        time = "09:00 AM",
+        result = "PLFD",
+        severity = "Severe",
+        temp = "31.2°C",
+        humidity = "88%",
+        color = Color(0xFFE65100),
+        bg = Color(0xFFFFF3E0),
+    ),
+
+    InspectionRecord(
+        id = 8,
+        date = "Jun 2, 2026",
+        time = "01:20 PM",
+        result = "Unidentified",
+        severity = "N/A",
+        temp = "—",
+        humidity = "—",
+        color = Color(0xFF616161),
+        bg = Color(0xFFF0F0F0),
+    )
 )
 
 
@@ -145,7 +231,7 @@ fun HistoryScreen(
             StatCard("$healthyCount",      "Healthy", Color(0xFF2E7D32), Modifier.weight(1f))
             StatCard("$diseaseCount",      "Disease", Color(0xFFE65100), Modifier.weight(1f))
             StatCard("$unidentifiedCount", "Unclear", Color(0xFF616161), Modifier.weight(1f))
-            StatCard("$totalCount",        "Total",   Color(0xFF37474F), Modifier.weight(1f))
+            StatCard("$totalCount",        "Total",   Color(0xFF2196F3), Modifier.weight(1f))
         }
 
         // ── Records List ────────────────────────────────────
@@ -179,7 +265,7 @@ fun StatCard(value: String, label: String, valueColor: Color, modifier: Modifier
                 .padding(vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(value, fontWeight = FontWeight.Bold,
+            Text(value, fontWeight = FontWeight.Black,
                 fontSize = 20.sp, color = valueColor)
             Text(label, color = TextMuted, fontSize = 11.sp)
         }
@@ -209,7 +295,12 @@ fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
                     .background(record.bg),
                 contentAlignment = Alignment.Center
             ) {
-                Text(record.emoji, fontSize = 24.sp)
+                Icon(
+                    painter = painterResource(R.drawable.leaf),
+                    contentDescription = record.result,
+                    tint = record.color,
+                    modifier = Modifier.size(32.dp)
+                )
             }
 
             Spacer(Modifier.width(12.dp))
