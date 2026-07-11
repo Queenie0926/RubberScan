@@ -15,163 +15,201 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import com.example.rubberscan.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.rubberscan.ui.theme.*
+import kotlin.time.Duration.Companion.milliseconds
 
-
-// ── Settings Screen ────────────────────────────────────────
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit = {},
-    onNavigate: (String) -> Unit = {}
+    onBack          : () -> Unit = {},
+    onNavigate      : (String) -> Unit = {},
+    notifications   : Boolean = true,
+    onNotifications : (Boolean) -> Unit = {},
+    diseaseAlerts   : Boolean = true,
+    onDiseaseAlerts : (Boolean) -> Unit = {},
+    autoReconnect   : Boolean = true,
+    onAutoReconnect : (Boolean) -> Unit = {},
+    onClearRecords  : (onDone: () -> Unit) -> Unit = {}
 ) {
-    var darkMode      by remember { mutableStateOf(false) }
-    var notifications by remember { mutableStateOf(true) }
-    var diseaseAlerts by remember { mutableStateOf(true) }
-    var weatherAlerts by remember { mutableStateOf(false) }
-    var autoReconnect by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    var storageUsed         by remember { mutableStateOf(getStorageUsed(context)) }
+    var showClearDialog     by remember { mutableStateOf(false) }
+    var showClearedNotif    by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PageBg)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // ── Header ──────────────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .clickable { onBack() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Back",
-                    tint = Color.White, modifier = Modifier.size(22.dp))
+    // ── Clear records confirmation dialog ────────────────
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = { Text("Clear All Records?", fontWeight = FontWeight.Bold) },
+            text  = { Text("This will permanently delete all scan history. This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearDialog = false
+                        onClearRecords {
+                            showClearedNotif = true
+                            storageUsed = getStorageUsed(context)
+                        }
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFEF5350))
+                ) {
+                    Text("Delete All", fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
             }
-            Spacer(Modifier.width(12.dp))
-            Text("Settings", color = Color.White,
-                fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        }
+        )
+    }
 
-        // ── Sections ────────────────────────────────────────
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PageBg)
+                .verticalScroll(rememberScrollState())
         ) {
-
-            // Appearance
-            SettingsSectionCard(title = "Appearance") {
-                SettingsToggleRow(
-                    icon = Icons.Default.DarkMode,
-                    iconTint = Color(0xFF3949AB),
-                    iconBg = Color(0xFFE8EAF6),
-                    label = "Dark Mode",
-                    checked = darkMode,
-                    onCheckedChange = { darkMode = it }
-                )
+            // ── Header ──────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(GreenDark)
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.15f))
+                        .clickable { onBack() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.ChevronLeft, contentDescription = "Back",
+                        tint = Color.White, modifier = Modifier.size(22.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Text("Settings", color = Color.White,
+                    fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
-            // BLE Sensor
-            SettingsSectionCard(title = "BLE Sensor") {
-                HorizontalDivider(color = BorderGray)
-                SettingsToggleRow(
-                    icon = Icons.Default.Refresh,
-                    iconTint = GreenDark,
-                    iconBg = GreenLight,
-                    label = "Auto-reconnect",
-                    checked = autoReconnect,
-                    onCheckedChange = { autoReconnect = it }
-                )
-            }
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // ── BLE Sensor ───────────────────────────────
+                SettingsSectionCard(title = "BLE Sensor") {
+                    SettingsToggleRow(
+                        icon            = Icons.Default.Refresh,
+                        iconTint        = GreenDark,
+                        iconBg          = GreenLight,
+                        label           = "Auto-reconnect",
+                        checked         = autoReconnect,
+                        onCheckedChange = onAutoReconnect
+                    )
+                }
 
-            // Notifications
-            SettingsSectionCard(title = "Notifications") {
-                SettingsToggleRow(
-                    icon = Icons.Default.Notifications,
-                    iconTint = OrangeDark,
-                    iconBg = OrangeLight,
-                    label = "Push Notifications",
-                    checked = notifications,
-                    onCheckedChange = { notifications = it }
-                )
-                HorizontalDivider(color = BorderGray)
-                SettingsEmojiToggleRow(
-                    emoji = "🍂",
-                    iconBg = OrangeLight,
-                    label = "Disease Alerts",
-                    checked = diseaseAlerts,
-                    onCheckedChange = { diseaseAlerts = it }
-                )
-                HorizontalDivider(color = BorderGray)
-                SettingsEmojiToggleRow(
-                    emoji = "🌧️",
-                    iconBg = BlueLight,
-                    label = "Weather Alerts",
-                    checked = weatherAlerts,
-                    onCheckedChange = { weatherAlerts = it }
-                )
-            }
+                // ── Notifications ────────────────────────────
+                SettingsSectionCard(title = "Notifications") {
+                    SettingsToggleRow(
+                        icon            = Icons.Default.Notifications,
+                        iconTint        = OrangeDark,
+                        iconBg          = OrangeLight,
+                        label           = "Push Notifications",
+                        checked         = notifications,
+                        onCheckedChange = onNotifications
+                    )
+                    HorizontalDivider(color = BorderGray)
+                    SettingsEmojiToggleRow(
+                        emoji           = "🍂",
+                        iconBg          = OrangeLight,
+                        label           = "Disease Alerts",
+                        checked         = diseaseAlerts,
+                        onCheckedChange = onDiseaseAlerts
+                    )
+                }
 
-            // Data Storage
-            SettingsSectionCard(title = "Data Storage") {
-                SettingsInfoRow(
-                    icon = Icons.Default.Storage,
-                    iconTint = SlateGray,
-                    iconBg = SlateGrayLight,
-                    label = "Storage Used",
-                    info = "142 MB"
-                )
-                HorizontalDivider(color = BorderGray)
-                SettingsEmojiNavRow(
-                    emoji = "🗑️",
-                    iconBg = RedLight,
-                    label = "Clear Old Records",
-                    onClick = { }
-                )
-            }
+                // ── Data Storage ─────────────────────────────
+                SettingsSectionCard(title = "Data Storage") {
+                    SettingsInfoRow(
+                        icon     = Icons.Default.Storage,
+                        iconTint = SlateGray,
+                        iconBg   = SlateGrayLight,
+                        label    = "Storage Used",
+                        info     = storageUsed
+                    )
+                    HorizontalDivider(color = BorderGray)
+                    SettingsEmojiNavRow(
+                        emoji   = "🗑️",
+                        iconBg  = RedLight,
+                        label   = "Clear Old Records",
+                        onClick = { showClearDialog = true }
+                    )
+                }
 
-            // Language
-            SettingsSectionCard(title = "Language") {
-                SettingsNavRowWithInfo(
-                    icon = Icons.Default.Language,
-                    iconTint = BlueDark,
-                    iconBg = BlueLight,
-                    label = "Display Language",
-                    info = "English"
-                )
-            }
+                // ── About ────────────────────────────────────
+                SettingsSectionCard(title = "About System") {
+                    SettingsInfoRow(
+                        icon     = Icons.Default.Info,
+                        iconTint = GreenDark,
+                        iconBg   = GreenLight,
+                        label    = "App Version",
+                        info     = "1.0.0"
+                    )
+                    HorizontalDivider(color = BorderGray)
+                    SettingsEmojiNavRow(
+                        emoji   = "📄",
+                        iconBg  = SurfaceGray,
+                        label   = "Privacy Policy",
+                        onClick = { onNavigate("privacy-policy") }
+                    )
+                }
 
-            // About
-            SettingsSectionCard(title = "About System") {
-                SettingsInfoRow(
-                    icon = Icons.Default.Info,
-                    iconTint = GreenDark,
-                    iconBg = GreenLight,
-                    label = "App Version",
-                    info = "1.0.0"
-                )
-                HorizontalDivider(color = BorderGray)
-                SettingsEmojiNavRow(
-                    emoji = "📄",
-                    iconBg = SurfaceGray,
-                    label = "Privacy Policy",
-                    onClick = { }
-                )
+                Spacer(Modifier.height(8.dp))
             }
-
-            Spacer(Modifier.height(8.dp))
         }
+
+        // ── Records cleared toast ────────────────────────────
+        if (showClearedNotif) {
+            Snackbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                action = {
+                    TextButton(onClick = { showClearedNotif = false }) {
+                        Text("OK", color = Color.White)
+                    }
+                },
+                containerColor = Color(0xFF323232)
+            ) {
+                Text("All scan records deleted.", color = Color.White)
+            }
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(3000.milliseconds)
+                showClearedNotif = false
+            }
+        }
+    }
+}
+
+// ── Storage calculator ──────────────────────────────────────
+fun getStorageUsed(context: android.content.Context): String {
+    var totalBytes = 0L
+    val dbDir = context.getDatabasePath("rubber_scan_db").parentFile
+    dbDir?.listFiles()?.forEach { totalBytes += it.length() }
+    context.cacheDir.listFiles()?.forEach { totalBytes += it.length() }
+    context.filesDir.listFiles()?.forEach { totalBytes += it.length() }
+    return when {
+        totalBytes < 1024        -> "$totalBytes B"
+        totalBytes < 1024 * 1024 -> "${"%.1f".format(totalBytes / 1024f)} KB"
+        else                     -> "${"%.1f".format(totalBytes / (1024f * 1024f))} MB"
     }
 }
 
@@ -234,8 +272,8 @@ fun SettingsToggleRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = GreenDark,
+                checkedThumbColor   = Color.White,
+                checkedTrackColor   = GreenDark,
                 uncheckedThumbColor = Color.White,
                 uncheckedTrackColor = BorderLight
             )
@@ -275,83 +313,12 @@ fun SettingsEmojiToggleRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = GreenDark,
+                checkedThumbColor   = Color.White,
+                checkedTrackColor   = GreenDark,
                 uncheckedThumbColor = Color.White,
                 uncheckedTrackColor = BorderLight
             )
         )
-    }
-}
-
-// ── Nav Row ─────────────────────────────────────────────────
-@Composable
-fun SettingsNavRow(
-    icon: ImageVector,
-    iconTint: Color,
-    iconBg: Color,
-    label: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = iconTint,
-                modifier = Modifier.size(18.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = TextPrimary,
-            modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, contentDescription = null,
-            tint = TextMuted2, modifier = Modifier.size(16.dp))
-    }
-}
-
-// ── Nav Row with Info ───────────────────────────────────────
-@Composable
-fun SettingsNavRowWithInfo(
-    icon: ImageVector,
-    iconTint: Color,
-    iconBg: Color,
-    label: String,
-    info: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = iconTint,
-                modifier = Modifier.size(18.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = TextPrimary,
-            modifier = Modifier.weight(1f))
-        Text(info, color = TextMuted2, fontSize = 13.sp)
-        Spacer(Modifier.width(4.dp))
-        Icon(Icons.Default.ChevronRight, contentDescription = null,
-            tint = TextMuted2, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -419,4 +386,10 @@ fun SettingsEmojiNavRow(
         Icon(Icons.Default.ChevronRight, contentDescription = null,
             tint = TextMuted2, modifier = Modifier.size(16.dp))
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    SettingsScreen()
 }

@@ -280,3 +280,4 @@ fun InspectionRecordRow(record: InspectionRecord, onClick: () -> Unit) {
         }
     }
 }
+

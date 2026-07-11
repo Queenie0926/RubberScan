@@ -21,4 +21,6 @@ class ScanRepository(
     suspend fun getScanById(scanId: Int): ScanHistory? = scanHistoryDao.getScanById(scanId)
     suspend fun deleteScan(scanId: Int) = scanHistoryDao.deleteScan(scanId)
     suspend fun clearHistory(userId: String) = scanHistoryDao.deleteAllScansForUser(userId)
+
+
 }

@@ -182,6 +182,29 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         _signUpState.value = _signUpState.value.copy(error = null)
     }
 
+    fun updateDisplayName(newName: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        val firebaseUser = auth.currentUser ?: return
+        viewModelScope.launch {
+            try {
+                // Update Firebase Auth profile
+                val profileUpdate = UserProfileChangeRequest.Builder()
+                    .setDisplayName(newName.trim())
+                    .build()
+                firebaseUser.updateProfile(profileUpdate).await()
+
+                // Update local Room database
+                val updatedUser = _currentUser.value?.copy(name = newName.trim()) ?: return@launch
+                repository.saveUser(updatedUser)
+
+                // Update in-memory state so UI reacts immediately
+                _currentUser.value = updatedUser
+
+                onSuccess()
+            } catch (e: Exception) {
+                onError("Failed to update name. Please try again.")
+            }
+        }
+    }
     private fun friendlyAuthError(e: Exception): String {
         val code = (e as? FirebaseAuthException)?.errorCode ?: ""
         return when (code) {
@@ -205,4 +228,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             else -> "Something went wrong. Please try again."
         }
     }
+
+    fun clearAllScanHistory(onDone: () -> Unit = {}) {
+        val userId = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            repository.clearHistory(userId)
+            onDone()
+        }
+    }
 }
+

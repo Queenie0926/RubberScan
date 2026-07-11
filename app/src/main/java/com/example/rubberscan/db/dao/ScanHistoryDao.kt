@@ -24,4 +24,7 @@ interface ScanHistoryDao {
 
     @Query("DELETE FROM scan_history WHERE userId = :userId")
     suspend fun deleteAllScansForUser(userId: String)
+
+    @Query("DELETE FROM scan_history")
+    suspend fun deleteAll()
 }

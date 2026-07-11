@@ -21,7 +21,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.filled.Logout
 
 // ── Data models ────────────────────────────────────────────
 data class ProfileMenuItem(
@@ -58,8 +62,53 @@ fun ProfileScreen(
     onNavigate: (String) -> Unit = {},
     onSignOut: () -> Unit = {},
     userName: String = "",
-    userEmail: String = ""
+    userEmail: String = "",
+    onNameChange: (String) -> Unit = {}
 ) {
+
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editedName by remember { mutableStateOf(userName) }
+
+    // ── Edit Name Dialog ─────────────────────────────────
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edit Name", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // TODO: save editedName to Firebase/ViewModel
+                        onNameChange(editedName)
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = GreenDark)
+                ) {
+                    Text("Save", fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        editedName = userName   // ← reset on cancel
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                ) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -95,7 +144,8 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f)),
+                        .background(Color.White.copy(alpha = 0.15f))
+                        .clickable { showEditDialog = true },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit",
@@ -244,7 +294,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(52.dp)
             ) {
-                Icon(Icons.Default.Logout, contentDescription = null,
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null,
                     modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Sign Out", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
@@ -310,3 +360,4 @@ fun MenuSectionCard(items: List<ProfileMenuItem>, onNavigate: (String) -> Unit) 
 fun Modifier.drawWithBorderStart(): Modifier = this.then(
     Modifier.padding(start = 1.dp)
 )
+
