@@ -94,6 +94,8 @@ fun ScanScreen(
 
     val imageCapture = remember { ImageCapture.Builder().build() }
     var isCapturing  by remember { mutableStateOf(false) }
+    var isFlashOn    by remember { mutableStateOf(false) }
+    var camera       by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
@@ -101,7 +103,8 @@ fun ScanScreen(
         CameraPreview(
             modifier       = Modifier.fillMaxSize(),
             imageCapture   = imageCapture,
-            lifecycleOwner = lifecycleOwner
+            lifecycleOwner = lifecycleOwner,
+            onCameraReady  = { camera = it }
         )
 
         // ── UI Overlay ───────────────────────────────────────
@@ -147,11 +150,22 @@ fun ScanScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.4f)),
+                        .background(
+                            if (isFlashOn) Color.White.copy(alpha = 0.6f)
+                            else Color.Black.copy(alpha = 0.4f)
+                        )
+                        .clickable {
+                            isFlashOn = !isFlashOn
+                            camera?.cameraControl?.enableTorch(isFlashOn)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.FlashOn, contentDescription = "Flash",
-                        tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(
+                        if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                        contentDescription = "Flash",
+                        tint = if (isFlashOn) Color(0xFFFFD600) else Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
 
@@ -249,7 +263,11 @@ fun ScanScreen(
                             capturePhoto(
                                 context      = context,
                                 imageCapture = imageCapture,
-                                onSuccess    = { onCapture() },
+                                onSuccess = {
+                                    isFlashOn = false
+                                    camera?.cameraControl?.enableTorch(false)
+                                    onCapture()
+                                },
                                 onError      = { isCapturing = false }
                             )
                         },
@@ -283,9 +301,10 @@ fun ScanScreen(
 // ── CameraX Preview ─────────────────────────────────────────
 @Composable
 fun CameraPreview(
-    modifier: Modifier,
-    imageCapture: ImageCapture,
-    lifecycleOwner: androidx.lifecycle.LifecycleOwner
+    modifier       : Modifier,
+    imageCapture   : ImageCapture,
+    lifecycleOwner : androidx.lifecycle.LifecycleOwner,
+    onCameraReady  : (androidx.camera.core.Camera) -> Unit = {}   // ← add this
 ) {
     AndroidView(
         factory = { ctx ->
@@ -299,12 +318,13 @@ fun CameraPreview(
                 }
                 try {
                     cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
+                    val cam = cameraProvider.bindToLifecycle(   // ← capture return value
                         lifecycleOwner,
                         CameraSelector.DEFAULT_BACK_CAMERA,
                         preview,
                         imageCapture
                     )
+                    onCameraReady(cam)                          // ← pass it back
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
     private val bleViewModel: BleViewModel by viewModels()
 
     private val settingsViewModel: SettingsViewModel by viewModels()
-
+    private val notifViewModel: NotificationViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -81,6 +81,28 @@ class MainActivity : ComponentActivity() {
 
                     LaunchedEffect(Unit) {
                         notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
+// ── Push sensor events to notification panel ─────────────
+                val bleStateForNotif by bleViewModel.bleState.collectAsState()
+                LaunchedEffect(bleStateForNotif) {
+                    when (bleStateForNotif) {
+                        BleState.DISCONNECTED -> notifViewModel.add(
+                            AppNotification(
+                                title   = "Sensor Disconnected",
+                                message = "Your BLE sensor has disconnected from RubberScan.",
+                                type    = NotifType.SENSOR
+                            )
+                        )
+                        BleState.CONNECTED -> notifViewModel.add(
+                            AppNotification(
+                                title   = "Sensor Connected",
+                                message = "Successfully connected to ${bleViewModel.connectedName.value.ifBlank { "your sensor" }}.",
+                                type    = NotifType.SENSOR
+                            )
+                        )
+                        else -> Unit
                     }
                 }
 
@@ -201,7 +223,8 @@ class MainActivity : ComponentActivity() {
                                     },
                                     userName = displayName,
                                     bleViewModel = bleViewModel,
-                                    isGuest = isGuest
+                                    isGuest = isGuest,
+                                    notifViewModel   = notifViewModel
                                 )
                             }
 
@@ -223,12 +246,19 @@ class MainActivity : ComponentActivity() {
                                 val notifications by settingsViewModel.notifications.collectAsState()
                                 ProcessingScreen(
                                     onComplete = {
-                                        // TODO: replace with real result + severity from your model
+                                        // Push to in-app notification panel
+                                        notifViewModel.add(
+                                            AppNotification(
+                                                title   = "Scan Complete",
+                                                message = "PLFD detected — Severity: Mild. Tap to view details.",
+                                                type    = NotifType.SCAN
+                                            )
+                                        )
                                         if (notifications) {
                                             NotificationHelper.notifyScanComplete(
-                                                context    = this@MainActivity,
-                                                result     = "PLFD",       // ← swap with real result later
-                                                severity   = "Mild"        // ← swap with real severity later
+                                                context  = this@MainActivity,
+                                                result   = "PLFD",
+                                                severity = "Mild"
                                             )
                                         }
                                         nav.navigate("result") {
@@ -267,21 +297,21 @@ class MainActivity : ComponentActivity() {
                                 val autoReconnect by settingsViewModel.autoReconnect.collectAsState()
 
                                 SettingsScreen(
-                                    onBack            = { nav.popBackStack() },
-                                    onNavigate        = { route -> nav.navigate(route) },
-                                    notifications     = notifications,
+                                    onBack          = { nav.popBackStack() },
+                                    onNavigate      = { route -> nav.navigate(route) },
+                                    notifications   = notifications,
                                     onNotifications = { enabled ->
                                         settingsViewModel.setNotifications(enabled)
-                                        bleViewModel.notificationsEnabled = enabled   // ← add
+                                        bleViewModel.notificationsEnabled = enabled
                                     },
-                                    diseaseAlerts     = diseaseAlerts,
-                                    onDiseaseAlerts   = { settingsViewModel.setDiseaseAlerts(it) },
-                                    autoReconnect     = autoReconnect,
+                                    diseaseAlerts   = diseaseAlerts,
+                                    onDiseaseAlerts = { settingsViewModel.setDiseaseAlerts(it) },
+                                    autoReconnect   = autoReconnect,
                                     onAutoReconnect = { enabled ->
                                         settingsViewModel.setAutoReconnect(enabled)
-                                        bleViewModel.autoReconnect = enabled        // ← sync to BleViewModel
+                                        bleViewModel.autoReconnect = enabled
                                     },
-
+                                    onClearRecords  = { onDone -> authViewModel.clearAllScanHistory(onDone) }  // ← add
                                 )
                             }
 
