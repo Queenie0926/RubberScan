@@ -20,19 +20,21 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
-private const val BLE_TAG = "BLEPairing"
+@Suppress("SpellCheckingInspection")
+private const val BLE_TAG = "BlePairing"
 
 @SuppressLint("MissingPermission")
 class BleViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val btManager = app.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    private val btManager: BluetoothManager =
+        app.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val btAdapter = btManager.adapter
-    private val mainHandler = Handler(Looper.getMainLooper())
+    private val mainHandler: Handler = Handler(Looper.getMainLooper())
 
     private val _bleState = MutableStateFlow(BleState.IDLE)
     val bleState: StateFlow<BleState> = _bleState
@@ -57,105 +59,201 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
 
     private var gatt: BluetoothGatt? = null
 
-    // ── Permission helpers ────────────────────────────────────────────────
-    fun hasPerm(perm: String) =
-        ContextCompat.checkSelfPermission(getApplication(), perm) == PackageManager.PERMISSION_GRANTED
+    // ── Settings-driven flags ─────────────────────────────
+    var autoReconnect: Boolean = false
+    var notificationsEnabled: Boolean = false
 
-    fun canScan() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+    // ── Auto-reconnect state ──────────────────────────────
+    private var lastConnectedDevice: BleDevice? = null
+    private var isIntentionalDisconnect: Boolean = false
+    private var reconnectAttempts: Int = 0
+    private val maxReconnectAttempts: Int = 5
+
+    // ── Permission helpers ────────────────────────────────
+    fun hasPerm(perm: String): Boolean =
+        ContextCompat.checkSelfPermission(
+            getApplication<Application>(), perm
+        ) == PackageManager.PERMISSION_GRANTED
+
+    fun canScan(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             hasPerm(Manifest.permission.BLUETOOTH_SCAN)
 
-    fun canConnect() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+    fun canConnect(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             hasPerm(Manifest.permission.BLUETOOTH_CONNECT)
 
-    // ── Toast (auto-clears after 2 seconds) ──────────────────────────────
+    // ── Toast ─────────────────────────────────────────────
     fun showToast(msg: String) {
         _toastMsg.value = msg
         viewModelScope.launch {
-            delay(2_000)
+            kotlinx.coroutines.delay(2.seconds)
             _toastMsg.value = ""
         }
     }
 
-    // ── GATT callback ─────────────────────────────────────────────────────
-    private val gattCallback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
-            mainHandler.post {
-                when (newState) {
-                    BluetoothProfile.STATE_CONNECTED -> {
-                        Log.d(BLE_TAG, "Connected to GATT server, discovering services...")
-                        _bleState.value  = BleState.CONNECTED
-                        _statusMsg.value = "Discovering sensor services..."
-                        if (canConnect()) g.discoverServices()
-                    }
-                    BluetoothProfile.STATE_DISCONNECTED -> {
-                        Log.d(BLE_TAG, "Disconnected from GATT server (status=$status)")
-                        _bleState.value    = BleState.DISCONNECTED
-                        _statusMsg.value   = "Sensor disconnected. Tap scan to reconnect."
-                        _temperature.value = null
-                        _humidity.value    = null
-                        g.close()
-                        gatt = null
-                    }
-                }
-            }
+    // ── Reconnect helper (extracted to break self-reference) ──
+    private fun attemptReconnect(deviceName: String) {
+        reconnectAttempts++
+        _statusMsg.value =
+            "Sensor disconnected. Reconnecting... (attempt $reconnectAttempts)"
+        if (reconnectAttempts == 1 && notificationsEnabled) {
+            NotificationHelper.notifySensorDisconnected(
+                getApplication<Application>(), deviceName
+            )
         }
-
-        override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
-            if (status != BluetoothGatt.GATT_SUCCESS || !canConnect()) return
-            val char = g.getService(SERVICE_UUID)?.getCharacteristic(SENSOR_CHAR_UUID) ?: run {
-                Log.e(BLE_TAG, "Sensor service or characteristic not found on device")
-                mainHandler.post { showToast("Sensor service not found on this device.") }
-                return
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(3.seconds)
+            val device: BleDevice = lastConnectedDevice ?: return@launch
+            if (_bleState.value != BleState.CONNECTED && canConnect()) {
+                _bleState.value = BleState.CONNECTING
+                val ctx: Application = getApplication<Application>()
+                gatt = device.device.connectGatt(ctx, false, buildGattCallback())
             }
-            @Suppress("DEPRECATION")
-            g.setCharacteristicNotification(char, true)
-            @Suppress("DEPRECATION")
-            val descriptor = char.getDescriptor(CLIENT_CONFIG_UUID)
-            if (descriptor != null) {
-                @Suppress("DEPRECATION")
-                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                @Suppress("DEPRECATION")
-                g.writeDescriptor(descriptor)
-            }
-            Log.d(BLE_TAG, "Notifications enabled — receiving live sensor data")
-            mainHandler.post { _statusMsg.value = "Receiving live data from your sensor." }
-        }
-
-        private fun handleSensorData(bytes: ByteArray) {
-            val json = bytes.toString(Charsets.UTF_8)
-            val t = Regex(""""t":([\d.]+)""").find(json)?.groupValues?.get(1)?.toFloatOrNull()
-            val h = Regex(""""h":([\d.]+)""").find(json)?.groupValues?.get(1)?.toFloatOrNull()
-            Log.d(BLE_TAG, "Sensor data received: t=$t, h=$h")
-            mainHandler.post {
-                if (t != null) _temperature.value = t
-                if (h != null) _humidity.value    = h
-            }
-        }
-
-        @Deprecated("Deprecated in Java")
-        @Suppress("DEPRECATION")
-        override fun onCharacteristicChanged(g: BluetoothGatt, char: BluetoothGattCharacteristic) {
-            handleSensorData(char.value ?: return)
-        }
-
-        override fun onCharacteristicChanged(g: BluetoothGatt, char: BluetoothGattCharacteristic, value: ByteArray) {
-            handleSensorData(value)
         }
     }
 
-    // ── Scan callback ─────────────────────────────────────────────────────
-    private val scanCallback = object : ScanCallback() {
+    // ── GATT callback factory (avoids self-reference) ────
+    private fun buildGattCallback(): BluetoothGattCallback = gattCallback
+
+    // ── GATT callback ─────────────────────────────────────
+    private val gattCallback: BluetoothGattCallback =
+        object : BluetoothGattCallback() {
+            override fun onConnectionStateChange(
+                g: BluetoothGatt,
+                status: Int,
+                newState: Int
+            ) {
+                mainHandler.post {
+                    when (newState) {
+                        BluetoothProfile.STATE_CONNECTED -> {
+                            Log.d(BLE_TAG, "Connected, discovering services...")
+                            _bleState.value  = BleState.CONNECTED
+                            _statusMsg.value = "Discovering sensor services..."
+                            if (canConnect()) g.discoverServices()
+                        }
+                        BluetoothProfile.STATE_DISCONNECTED -> {
+                            Log.d(BLE_TAG, "Disconnected (status=$status)")
+                            _bleState.value    = BleState.DISCONNECTED
+                            _temperature.value = null
+                            _humidity.value    = null
+                            g.close()
+                            gatt = null
+
+                            val deviceName: String =
+                                _connectedName.value.ifBlank { "Sensor" }
+
+                            val shouldReconnect: Boolean = autoReconnect
+                                    && !isIntentionalDisconnect
+                                    && lastConnectedDevice != null
+                                    && reconnectAttempts < maxReconnectAttempts
+
+                            if (shouldReconnect) {
+                                attemptReconnect(deviceName)
+                            } else {
+                                isIntentionalDisconnect = false
+                                if (autoReconnect &&
+                                    reconnectAttempts >= maxReconnectAttempts
+                                ) {
+                                    _statusMsg.value =
+                                        "Could not reconnect after " +
+                                                "$maxReconnectAttempts attempts. " +
+                                                "Tap scan to try again."
+                                    if (notificationsEnabled) {
+                                        NotificationHelper.notifyReconnectFailed(
+                                            getApplication<Application>(),
+                                            deviceName,
+                                            maxReconnectAttempts
+                                        )
+                                    }
+                                } else {
+                                    if (notificationsEnabled) {
+                                        NotificationHelper.notifySensorDisconnected(
+                                            getApplication<Application>(),
+                                            deviceName
+                                        )
+                                    }
+                                    _statusMsg.value =
+                                        "Sensor disconnected. Tap scan to reconnect."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
+                if (status != BluetoothGatt.GATT_SUCCESS || !canConnect()) return
+                val char = g.getService(SERVICE_UUID)
+                    ?.getCharacteristic(SENSOR_CHAR_UUID) ?: run {
+                    Log.e(BLE_TAG, "Sensor characteristic not found")
+                    mainHandler.post {
+                        showToast("Sensor service not found on this device.")
+                    }
+                    return
+                }
+                @Suppress("DEPRECATION")
+                g.setCharacteristicNotification(char, true)
+                @Suppress("DEPRECATION")
+                val descriptor = char.getDescriptor(CLIENT_CONFIG_UUID)
+                if (descriptor != null) {
+                    @Suppress("DEPRECATION")
+                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    @Suppress("DEPRECATION")
+                    g.writeDescriptor(descriptor)
+                }
+                Log.d(BLE_TAG, "Notifications enabled")
+                mainHandler.post {
+                    _statusMsg.value = "Receiving live data from your sensor."
+                }
+            }
+
+            private fun handleSensorData(bytes: ByteArray) {
+                val json: String = bytes.toString(Charsets.UTF_8)
+                val t: Float? = Regex(""""t":([\d.]+)""")
+                    .find(json)?.groupValues?.get(1)?.toFloatOrNull()
+                val h: Float? = Regex(""""h":([\d.]+)""")
+                    .find(json)?.groupValues?.get(1)?.toFloatOrNull()
+                Log.d(BLE_TAG, "Sensor data: t=$t, h=$h")
+                mainHandler.post {
+                    if (t != null) _temperature.value = t
+                    if (h != null) _humidity.value = h
+                }
+            }
+
+            @Deprecated("Deprecated in Java")
+            @Suppress("DEPRECATION")
+            override fun onCharacteristicChanged(
+                g: BluetoothGatt,
+                char: BluetoothGattCharacteristic
+            ) {
+                handleSensorData(char.value ?: return)
+            }
+
+            override fun onCharacteristicChanged(
+                g: BluetoothGatt,
+                char: BluetoothGattCharacteristic,
+                value: ByteArray
+            ) {
+                handleSensorData(value)
+            }
+        }
+
+    // ── Scan callback ─────────────────────────────────────
+    private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val name = if (canConnect()) result.device.name ?: "Unknown" else "Unknown"
+            val name: String =
+                if (canConnect()) result.device.name ?: "Unknown" else "Unknown"
             val entry = BleDevice(name, result.device.address, result.rssi, result.device)
             mainHandler.post {
-                _foundDevices.value = (_foundDevices.value.filter { it.address != entry.address } + entry)
-                    .sortedByDescending { if (it.name.contains(TARGET_DEVICE_NAME)) 1000 else it.rssi }
+                _foundDevices.value =
+                    (_foundDevices.value.filter { it.address != entry.address } + entry)
+                        .sortedByDescending {
+                            if (it.name.contains(TARGET_DEVICE_NAME)) 1000 else it.rssi
+                        }
             }
         }
 
         override fun onScanFailed(errorCode: Int) {
-            Log.e(BLE_TAG, "BLE scan failed with error code: $errorCode")
+            Log.e(BLE_TAG, "BLE scan failed: $errorCode")
             mainHandler.post {
                 _bleState.value = BleState.ERROR
                 showToast("Scan failed. Please try again.")
@@ -163,23 +261,22 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ── Public actions ────────────────────────────────────────────────────
+    // ── Public actions ────────────────────────────────────
     fun startScan() {
         _foundDevices.value = emptyList()
         _bleState.value     = BleState.SCANNING
         _statusMsg.value    = "Looking for nearby sensors..."
         Log.d(BLE_TAG, "Starting BLE scan...")
-
         viewModelScope.launch {
             btAdapter?.bluetoothLeScanner?.startScan(scanCallback)
-            delay(12_000)
+            kotlinx.coroutines.delay(12.seconds)
             if (_bleState.value == BleState.SCANNING) {
                 btAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
                 _bleState.value  = BleState.IDLE
                 _statusMsg.value = if (_foundDevices.value.isEmpty())
                     "Tap 'Scan for Devices' to find your sensor"
                 else "Tap a device below to connect"
-                Log.d(BLE_TAG, "Scan timed out. Devices found: ${_foundDevices.value.size}")
+                Log.d(BLE_TAG, "Scan timed out.")
                 if (_foundDevices.value.isEmpty())
                     showToast("No devices found. Make sure your sensor is on.")
             }
@@ -198,6 +295,8 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
         _bleState.value      = BleState.CONNECTING
         _connectedName.value = device.name
         _statusMsg.value     = "Connecting to ${device.name}..."
+        lastConnectedDevice  = device
+        reconnectAttempts    = 0
         Log.d(BLE_TAG, "Connecting to ${device.name} (${device.address})...")
         if (canConnect()) {
             gatt = device.device.connectGatt(context, false, gattCallback)
@@ -205,17 +304,19 @@ class BleViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun disconnect() {
+        isIntentionalDisconnect = true
+        reconnectAttempts = 0
         if (canConnect()) gatt?.disconnect()
     }
 
     fun onPermissionDenied() {
-        Log.w(BLE_TAG, "Bluetooth permissions denied by user")
+        Log.w(BLE_TAG, "Bluetooth permissions denied")
         _bleState.value = BleState.ERROR
         showToast("Bluetooth permission is required to scan for sensors.")
     }
 
     fun onBluetoothNotEnabled() {
-        Log.w(BLE_TAG, "Bluetooth not enabled by user")
+        Log.w(BLE_TAG, "Bluetooth not enabled")
         _bleState.value = BleState.ERROR
         showToast("Please turn on Bluetooth to pair your sensor.")
     }
