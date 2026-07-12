@@ -36,7 +36,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.tooling.preview.Preview
+
+
 
 
 // ── Bottom Nav Item model ───────────────────────────────────
@@ -274,30 +275,44 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f))
-                        .clickable {
-                            showNotifPanel = true
-                            notifViewModel?.markAllRead()
-                        },
+                        .size(48.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Notifications, contentDescription = "Notifications",
-                        tint = Color.White, modifier = Modifier.size(20.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.15f))
+                            .clickable {
+                                showNotifPanel = true
+                                notifViewModel?.markAllRead()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     if (unreadCount > 0) {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .size(16.dp)
+                                .offset(x = 1.dp, y = 1.dp)
+                                .size(17.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEF5350)),
+                                .background(Color(0xFFF44336)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                if (unreadCount > 9) "9+" else "$unreadCount",
-                                fontSize = 9.sp, color = Color.White,
-                                fontWeight = FontWeight.Bold
+                                text = if (unreadCount > 9) "9+" else unreadCount.toString(),
+                                fontSize = 9.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 9.sp
                             )
                         }
                     }
@@ -497,43 +512,78 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
+                        .background(Color.Black.copy(alpha = 0.20f))
                         .clickable { showNotifPanel = false }
                 )
                 Card(
-                    shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(12.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 10.dp
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 420.dp)
+                        .padding(
+                            start = 14.dp,
+                            end = 14.dp,
+                            top = 70.dp
+                        )
+                        .heightIn(
+                            min = 150.dp,
+                            max = 460.dp
+                        )
                         .align(Alignment.TopCenter)
                 ) {
                     Column {
                         Row(
-                            modifier = Modifier.fillMaxWidth().background(GreenDark)
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(GreenDark)
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Notifications", color = Color.White,
-                                fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            TextButton(onClick = {
-                                notifViewModel?.clear()
-                                showNotifPanel = false
-                            }) {
-                                Text("Clear all", color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 12.sp)
+                            Text(
+                                text = "Notifications",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            TextButton(
+                                onClick = {
+                                    notifViewModel?.clear()
+                                    showNotifPanel = false
+                                }
+                            ) {
+                                Text(
+                                    text = "Clear all",
+                                    color = Color.White.copy(alpha = 0.90f),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
+
                         if (notifications.isEmpty()) {
                             Box(modifier = Modifier.fillMaxWidth().height(120.dp),
                                 contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("🔔", fontSize = 28.sp)
+                                    Image(
+                                        painter = painterResource(R.drawable.no_notification),
+                                        contentDescription = "No notifications",
+                                        modifier = Modifier.size(48.dp),
+                                        contentScale = ContentScale.Fit
+                                    )
                                     Spacer(Modifier.height(8.dp))
-                                    Text("No notifications yet",
-                                        color = Color(0xFF9E9E9E), fontSize = 13.sp)
+                                    Text(
+                                        text = "No notifications yet",
+                                        color = Color(0xFF757575),
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
                         } else {
@@ -773,40 +823,87 @@ fun RecentInspectionRow(item: RecentInspection, onClick: () -> Unit) {
 }
 
 @Composable
-private fun NotifPanelRow(notif: AppNotification, onClick: () -> Unit) {
-    val emoji = when (notif.type) {
-        NotifType.DISEASE -> "⚠️"
-        NotifType.SENSOR  -> "📡"
-        NotifType.SCAN    -> "✅"
-        NotifType.INFO    -> "ℹ️"
+fun NotifPanelRow(
+    notif: AppNotification,
+    onClick: () -> Unit
+) {
+    val iconRes = when {
+        notif.type == NotifType.SCAN -> R.drawable.completed
+        notif.type == NotifType.DISEASE -> R.drawable.completed
+        notif.type == NotifType.SENSOR -> R.drawable.ble_status
+        else -> R.drawable.no_notification
     }
+
+    val iconTint = when {
+        notif.type == NotifType.SENSOR &&
+                notif.title.contains("Disconnected", ignoreCase = true) -> {
+            Color(0xFFD32F2F)
+        }
+
+        notif.type == NotifType.SENSOR &&
+                notif.title.contains("Connected", ignoreCase = true) -> {
+            Color(0xFF2E7D32)
+        }
+
+        else -> GreenDark
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (!notif.isRead) Color(0xFFF1F8E9) else Color.White)
-            .clickable { onClick() }                // ← add this
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Text(emoji, fontSize = 20.sp, modifier = Modifier.padding(top = 2.dp))
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(notif.title, fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp, color = Color(0xFF1C1C1C))
-            Text(notif.message, fontSize = 12.sp,
-                color = Color(0xFF616161), lineHeight = 17.sp)
-            Spacer(Modifier.height(3.dp))
-            Text("Tap to view details",                // ← add this
-                fontSize = 10.sp, color = GreenDark,
-                fontWeight = FontWeight.Medium)
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(
+                    color = iconTint.copy(alpha = 0.12f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = notif.title,
+                tint = iconTint,
+                modifier = Modifier.size(24.dp)
+            )
         }
-        Spacer(Modifier.width(8.dp))
-        Text(notif.time, fontSize = 10.sp, color = Color(0xFF9E9E9E))
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = notif.title,
+                color = Color(0xFF212121),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = notif.message,
+                color = Color(0xFF616161),
+                fontSize = 14.sp,
+                lineHeight = 19.sp
+            )
+
+            if (notif.time.isNotBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = notif.time,
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp
+                )
+            }
+        }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen() // call your composable here
-}
