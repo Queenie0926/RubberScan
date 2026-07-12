@@ -30,6 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Calendar
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.tooling.preview.Preview
+
 
 // ── Bottom Nav Item model ───────────────────────────────────
 private data class BottomNavItem(
@@ -84,6 +92,14 @@ fun HomeScreen(
         in 12..17 -> "Good afternoon"
         else -> "Good evening"
     }
+
+    val notifications by (notifViewModel?.notifications
+        ?: kotlinx.coroutines.flow.MutableStateFlow<List<AppNotification>>(emptyList())).collectAsState()
+    val unreadCount = notifications.count { !it.isRead }
+
+    var showNotifPanel      by remember { mutableStateOf(false) }
+    var showSensorDialog    by remember { mutableStateOf(false) }
+    var selectedSensorNotif by remember { mutableStateOf<AppNotification?>(null) }
 
     val quickActions = listOf(
         QuickAction(
@@ -213,311 +229,394 @@ fun HomeScreen(
         RecentInspection("Jun 7, 11:05 AM",     "Healthy",     "94%", GreenDark,           GreenLight)
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PageBg)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // ── Header ─────────────────────────────────────────
-        Box(
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // ── Main scrollable content ──────────────────────
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 65.dp)
+                .fillMaxSize()
+                .background(PageBg)
+                .verticalScroll(rememberScrollState())
         ) {
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if(currentHour in 0..11) {
-                        Image(
-                            painterResource(R.drawable.morning),
-                            contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            colorFilter = ColorFilter.tint(Color.White)
-                        )
-                    } else if(currentHour in 12..17) {
-                        Image(
-                            painterResource(R.drawable.afternoon),
-                            contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            colorFilter = ColorFilter.tint(Color.White)
-                        )
-                    } else {
-                        Image(
-                            painterResource(R.drawable.evening),
-                            contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            colorFilter = ColorFilter.tint(Color.White)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text("$greeting,", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = if (userName.isNotBlank()) "$userName!" else "Welcome!",
-                    color = Color.White,
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text("📍 Marilog District Plantation",
-                    color = Color(0xFFA5D6A7), fontSize = 12.sp)
-            }
+            // ── Header ───────────────────────────────────
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .clickable { },
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .background(GreenDark)
+                    .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 65.dp)
             ) {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifications",
-                    tint = Color.White, modifier = Modifier.size(20.dp))
-            }
-        }
-
-        // ── Plantation Status Card ──────────────────────────
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .offset(y = (-48).dp)
-        ) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBg),
-                elevation = CardDefaults.cardElevation(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Plantation Status",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 15.sp,
-                            color = TextPrimary
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = GreenLight
-                        ) {
-                            Text(
-                                text = "Low Risk",
-                                color = GreenMid,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(
-                                    horizontal = 10.dp,
-                                    vertical = 4.dp
-                                )
-                            )
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        when (currentHour) {
+                            in 0..11 -> Image(painterResource(R.drawable.morning),
+                                contentDescription = null, modifier = Modifier.size(13.dp),
+                                colorFilter = ColorFilter.tint(Color.White))
+                            in 12..17 -> Image(painterResource(R.drawable.afternoon),
+                                contentDescription = null, modifier = Modifier.size(13.dp),
+                                colorFilter = ColorFilter.tint(Color.White))
+                            else -> Image(painterResource(R.drawable.evening),
+                                contentDescription = null, modifier = Modifier.size(13.dp),
+                                colorFilter = ColorFilter.tint(Color.White))
                         }
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("$greeting,", color = Color.White,
+                            fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.temperature),
-                                contentDescription = "Temperature",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.size(24.dp)
-                            )
-
-                            Text(
-                                text = "28°C",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = TextPrimary
-                            )
-
-                            Text(
-                                text = "Temperature",
-                                color = TextMuted,
-                                fontSize = 11.sp
-                            )
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .height(48.dp)
-                                .align(Alignment.CenterVertically),
-                            color = BorderGray
-                        )
-
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.humidity),
-                                contentDescription = "Humidity",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.size(24.dp)
-                            )
-
-                            Text(
-                                text = "72%",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = TextPrimary
-                            )
-
-                            Text(
-                                text = "Humidity",
-                                color = TextMuted,
-                                fontSize = 11.sp
-                            )
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .height(48.dp)
-                                .align(Alignment.CenterVertically),
-                            color = BorderGray
-                        )
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.record),
-                                contentDescription = conditionText,
-                                contentScale = ContentScale.Fit,
-                                colorFilter = ColorFilter.tint(conditionColor),
-                                modifier = Modifier.size(24.dp)
-                            )
-
-                            Text(
-                                text = conditionText,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = conditionColor
-                            )
-
-                            Text(
-                                text = "Conditions",
-                                color = TextMuted,
-                                fontSize = 11.sp
-                            )
-                        }
-
-                    }
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = if (userName.isNotBlank()) "$userName!" else "Welcome!",
+                        color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text("📍 Marilog District Plantation",
+                        color = Color(0xFFA5D6A7), fontSize = 12.sp)
                 }
-            }
-        }
-
-        // ── Quick Actions ───────────────────────────────────
-        Column(modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .offset(y = (-36).dp)
-        ) {
-            Text("Quick Actions", fontWeight = FontWeight.Black,
-                fontSize = 15.sp, color = Color(0xFF4A4A4A),
-                modifier = Modifier.padding(bottom = 10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                quickActions.forEach { action ->
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(action.bgColor)
-                            .clickable { onNavigate(action.route) }
-                            .padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.15f))
+                        .clickable {
+                            showNotifPanel = true
+                            notifViewModel?.markAllRead()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Notifications",
+                        tint = Color.White, modifier = Modifier.size(20.dp))
+                    if (unreadCount > 0) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(action.iconColor),
+                                .align(Alignment.TopEnd)
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEF5350)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(action.iconRes),
-                                contentDescription = action.label,
-                                modifier = Modifier.size(22.dp),
-                                colorFilter = ColorFilter.tint(Color.White)
+                            Text(
+                                if (unreadCount > 9) "9+" else "$unreadCount",
+                                fontSize = 9.sp, color = Color.White,
+                                fontWeight = FontWeight.Bold
                             )
                         }
-                        Spacer(Modifier.height(6.dp))
-                        Text(action.label, fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = action.iconColor, lineHeight = 13.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 4.dp))
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            // ── Sensor Status ───────────────────────────────
-            Text("Sensor Status", fontWeight = FontWeight.Black,
-                fontSize = 15.sp, color = Color(0xFF4A4A4A),
-                modifier = Modifier.padding(bottom = 10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            // ── Plantation Status Card ────────────────────
+            Box(modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .offset(y = (-48).dp)
             ) {
-                statusCards.chunked(2).forEach { rowCards ->
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        rowCards.forEach { card -> SensorStatusCard(card) }
-                    }
-                }
-            }
-
-
-            Spacer(Modifier.height(16.dp))
-
-            // ── Recent Inspections ──────────────────────────
-            if (!isGuest) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = CardBg),
+                    elevation = CardDefaults.cardElevation(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Recent Inspections", fontWeight = FontWeight.Black,
-                        fontSize = 15.sp, color = Color(0xFF4A4A4A))
-                    TextButton(onClick = { onNavigate("history") }) {
-                        Text("View all", color = GreenDark,
-                            fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Icon(Icons.Default.ChevronRight, contentDescription = null,
-                            tint = GreenDark, modifier = Modifier.size(16.dp))
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Plantation Status", fontWeight = FontWeight.Black,
+                                fontSize = 15.sp, color = TextPrimary)
+                            Surface(shape = RoundedCornerShape(50), color = GreenLight) {
+                                Text("Low Risk", color = GreenMid, fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(painter = painterResource(R.drawable.temperature),
+                                    contentDescription = "Temperature", contentScale = ContentScale.Fit,
+                                    modifier = Modifier.size(24.dp))
+                                Text(tempText, fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp, color = TextPrimary)
+                                Text("Temperature", color = TextMuted, fontSize = 11.sp)
+                            }
+                            HorizontalDivider(modifier = Modifier.width(1.dp).height(48.dp)
+                                .align(Alignment.CenterVertically), color = BorderGray)
+                            Column(modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(painter = painterResource(R.drawable.humidity),
+                                    contentDescription = "Humidity", contentScale = ContentScale.Fit,
+                                    modifier = Modifier.size(24.dp))
+                                Text(humText, fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp, color = TextPrimary)
+                                Text("Humidity", color = TextMuted, fontSize = 11.sp)
+                            }
+                            HorizontalDivider(modifier = Modifier.width(1.dp).height(48.dp)
+                                .align(Alignment.CenterVertically), color = BorderGray)
+                            Column(modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(painter = painterResource(R.drawable.record),
+                                    contentDescription = conditionText, contentScale = ContentScale.Fit,
+                                    colorFilter = ColorFilter.tint(conditionColor),
+                                    modifier = Modifier.size(24.dp))
+                                Text(conditionText, fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp, color = conditionColor)
+                                Text("Conditions", color = TextMuted, fontSize = 11.sp)
+                            }
+                        }
                     }
-                }
-
-                recentInspections.forEach { item ->
-                    Spacer(Modifier.height(8.dp))
-                    RecentInspectionRow(item, onClick = { onNavigate("history-detail") })
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            // ── Quick Actions + Sensor Status + Recent ────
+            Column(modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .offset(y = (-36).dp)
+            ) {
+                Text("Quick Actions", fontWeight = FontWeight.Black,
+                    fontSize = 15.sp, color = Color(0xFF4A4A4A),
+                    modifier = Modifier.padding(bottom = 10.dp))
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    quickActions.forEach { action ->
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(action.bgColor)
+                                .clickable { onNavigate(action.route) }
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
+                                .background(action.iconColor), contentAlignment = Alignment.Center) {
+                                Image(painter = painterResource(action.iconRes),
+                                    contentDescription = action.label, modifier = Modifier.size(22.dp),
+                                    colorFilter = ColorFilter.tint(Color.White))
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(action.label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
+                                color = action.iconColor, lineHeight = 13.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 4.dp))
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text("Sensor Status", fontWeight = FontWeight.Black,
+                    fontSize = 15.sp, color = Color(0xFF4A4A4A),
+                    modifier = Modifier.padding(bottom = 10.dp))
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    statusCards.chunked(2).forEach { rowCards ->
+                        Column(modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            rowCards.forEach { card -> SensorStatusCard(card) }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                if (!isGuest) {
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("Recent Inspections", fontWeight = FontWeight.Black,
+                            fontSize = 15.sp, color = Color(0xFF4A4A4A))
+                        TextButton(onClick = { onNavigate("history") }) {
+                            Text("View all", color = GreenDark,
+                                fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Icon(Icons.Default.ChevronRight, contentDescription = null,
+                                tint = GreenDark, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    recentInspections.forEach { item ->
+                        Spacer(Modifier.height(8.dp))
+                        RecentInspectionRow(item, onClick = { onNavigate("history-detail") })
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+            }
+        } // ← end of main Column
+
+        // ── Sensor Info Dialog ───────────────────────────
+        if (showSensorDialog && selectedSensorNotif != null) {
+            AlertDialog(
+                onDismissRequest = { showSensorDialog = false },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("📡 ", fontSize = 18.sp)
+                        Text(selectedSensorNotif!!.title,
+                            fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(selectedSensorNotif!!.message, fontSize = 13.sp,
+                            color = Color(0xFF424242), lineHeight = 19.sp)
+                        HorizontalDivider()
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Thermostat, contentDescription = null,
+                                tint = OrangeDark, modifier = Modifier.size(14.dp))
+                            Text("Temp: $tempText", fontSize = 12.sp, color = TextMuted)
+                            Spacer(Modifier.width(8.dp))
+                            Icon(Icons.Default.WaterDrop, contentDescription = null,
+                                tint = BlueDark, modifier = Modifier.size(14.dp))
+                            Text("Humidity: $humText", fontSize = 12.sp, color = TextMuted)
+                        }
+                        Text("Time: ${selectedSensorNotif!!.time}",
+                            fontSize = 12.sp, color = TextMuted)
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showSensorDialog = false
+                            showNotifPanel = false
+                            onNavigate("ble-pairing")
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = GreenDark)
+                    ) { Text("Go to BLE Pairing", fontWeight = FontWeight.SemiBold) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showSensorDialog = false }) {
+                        Text("Close", color = Color.Gray)
+                    }
+                }
+            )
         }
+
+        // ── Notification Panel ───────────────────────────
+        if (showNotifPanel) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                        .clickable { showNotifPanel = false }
+                )
+                Card(
+                    shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .align(Alignment.TopCenter)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().background(GreenDark)
+                                .padding(horizontal = 20.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Notifications", color = Color.White,
+                                fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            TextButton(onClick = {
+                                notifViewModel?.clear()
+                                showNotifPanel = false
+                            }) {
+                                Text("Clear all", color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 12.sp)
+                            }
+                        }
+                        if (notifications.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxWidth().height(120.dp),
+                                contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("🔔", fontSize = 28.sp)
+                                    Spacer(Modifier.height(8.dp))
+                                    Text("No notifications yet",
+                                        color = Color(0xFF9E9E9E), fontSize = 13.sp)
+                                }
+                            }
+                        } else {
+                            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                                notifications.forEach { notif ->
+                                    NotifPanelRow(
+                                        notif = notif,
+                                        onClick = {
+                                            when (notif.type) {
+                                                NotifType.SCAN, NotifType.DISEASE -> {
+                                                    showNotifPanel = false
+                                                    onNavigate("history-detail")
+                                                }
+                                                NotifType.SENSOR -> {
+                                                    selectedSensorNotif = notif
+                                                    showSensorDialog = true
+                                                }
+                                                NotifType.INFO -> showNotifPanel = false
+                                            }
+                                        }
+                                    )
+                                    HorizontalDivider(color = Color(0xFFF0F0F0))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    } // ← end of outer Box
+    // ── Sensor Info Dialog ───────────────────────────────────
+    if (showSensorDialog && selectedSensorNotif != null) {
+        AlertDialog(
+            onDismissRequest = { showSensorDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📡 ", fontSize = 18.sp)
+                    Text(selectedSensorNotif!!.title,
+                        fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(selectedSensorNotif!!.message,
+                        fontSize = 13.sp, color = Color(0xFF424242),
+                        lineHeight = 19.sp)
+                    HorizontalDivider()
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Thermostat, contentDescription = null,
+                            tint = OrangeDark, modifier = Modifier.size(14.dp))
+                        Text("Temp: $tempText", fontSize = 12.sp, color = TextMuted)
+                        Spacer(Modifier.width(8.dp))
+                        Icon(Icons.Default.WaterDrop, contentDescription = null,
+                            tint = BlueDark, modifier = Modifier.size(14.dp))
+                        Text("Humidity: $humText", fontSize = 12.sp, color = TextMuted)
+                    }
+                    Text("Time: ${selectedSensorNotif!!.time}",
+                        fontSize = 12.sp, color = TextMuted)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSensorDialog = false
+                        showNotifPanel = false
+                        onNavigate("ble-pairing")
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = GreenDark)
+                ) {
+                    Text("Go to BLE Pairing", fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSensorDialog = false }) {
+                    Text("Close", color = Color.Gray)
+                }
+            }
+        )
     }
 }
+
 
 // ── Bottom Navigation Bar ───────────────────────────────────
 @Composable
@@ -673,3 +772,41 @@ fun RecentInspectionRow(item: RecentInspection, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun NotifPanelRow(notif: AppNotification, onClick: () -> Unit) {
+    val emoji = when (notif.type) {
+        NotifType.DISEASE -> "⚠️"
+        NotifType.SENSOR  -> "📡"
+        NotifType.SCAN    -> "✅"
+        NotifType.INFO    -> "ℹ️"
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(if (!notif.isRead) Color(0xFFF1F8E9) else Color.White)
+            .clickable { onClick() }                // ← add this
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(emoji, fontSize = 20.sp, modifier = Modifier.padding(top = 2.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(notif.title, fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp, color = Color(0xFF1C1C1C))
+            Text(notif.message, fontSize = 12.sp,
+                color = Color(0xFF616161), lineHeight = 17.sp)
+            Spacer(Modifier.height(3.dp))
+            Text("Tap to view details",                // ← add this
+                fontSize = 10.sp, color = GreenDark,
+                fontWeight = FontWeight.Medium)
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(notif.time, fontSize = 10.sp, color = Color(0xFF9E9E9E))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    HomeScreen() // call your composable here
+}
