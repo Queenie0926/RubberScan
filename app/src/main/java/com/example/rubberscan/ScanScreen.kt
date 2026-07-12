@@ -97,8 +97,11 @@ fun ScanScreen(
     var isFlashOn    by remember { mutableStateOf(false) }
     var camera       by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
         // ── Live Camera Preview ──────────────────────────────
         CameraPreview(
             modifier       = Modifier.fillMaxSize(),
@@ -108,8 +111,11 @@ fun ScanScreen(
         )
 
         // ── UI Overlay ───────────────────────────────────────
-        Column(modifier = Modifier.fillMaxSize()) {
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()   // ← handles status bar + nav bar area
+        ) {
             // ── Top Bar ──────────────────────────────────────
             Row(
                 modifier = Modifier
@@ -172,7 +178,7 @@ fun ScanScreen(
             // ── Sensor Panel ──────────────────────────────────
             Box(modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(top = 12.dp)
+                .padding(top = 6 .dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -254,6 +260,7 @@ fun ScanScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Box(
+
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
