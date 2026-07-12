@@ -15,13 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.rubberscan.ui.theme.*
 import kotlin.time.Duration.Companion.milliseconds
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun SettingsScreen(
@@ -110,67 +112,69 @@ fun SettingsScreen(
                 // ── BLE Sensor ───────────────────────────────
                 SettingsSectionCard(title = "BLE Sensor") {
                     SettingsToggleRow(
-                        icon            = Icons.Default.Refresh,
-                        iconTint        = GreenDark,
-                        iconBg          = GreenLight,
-                        label           = "Auto-reconnect",
-                        checked         = autoReconnect,
+                        iconRes = R.drawable.reconnect,
+                        iconBg = GreenLight,
+                        label = "Auto-reconnect",
+                        checked = autoReconnect,
                         onCheckedChange = onAutoReconnect
                     )
                 }
 
-                // ── Notifications ────────────────────────────
+// ── Notifications ────────────────────────────
                 SettingsSectionCard(title = "Notifications") {
                     SettingsToggleRow(
-                        icon            = Icons.Default.Notifications,
-                        iconTint        = OrangeDark,
-                        iconBg          = OrangeLight,
-                        label           = "Push Notifications",
-                        checked         = notifications,
+                        iconRes = R.drawable.push_notification,
+                        iconBg = OrangeLight,
+                        label = "Push Notifications",
+                        checked = notifications,
                         onCheckedChange = onNotifications
                     )
+
                     HorizontalDivider(color = BorderGray)
-                    SettingsEmojiToggleRow(
-                        emoji           = "🍂",
-                        iconBg          = OrangeLight,
-                        label           = "Disease Alerts",
-                        checked         = diseaseAlerts,
+
+                    SettingsToggleRow(
+                        iconRes = R.drawable.alert,
+                        iconBg = OrangeLight,
+                        label = "Disease Alerts",
+                        checked = diseaseAlerts,
                         onCheckedChange = onDiseaseAlerts
                     )
                 }
 
-                // ── Data Storage ─────────────────────────────
+// ── Data Storage ─────────────────────────────
                 SettingsSectionCard(title = "Data Storage") {
                     SettingsInfoRow(
-                        icon     = Icons.Default.Storage,
-                        iconTint = SlateGray,
-                        iconBg   = SlateGrayLight,
-                        label    = "Storage Used",
-                        info     = storageUsed
+                        iconRes = R.drawable.storage,
+                        iconBg = SlateGrayLight,
+                        label = "Storage Used",
+                        info = storageUsed
                     )
+
                     HorizontalDivider(color = BorderGray)
-                    SettingsEmojiNavRow(
-                        emoji   = "🗑️",
-                        iconBg  = RedLight,
-                        label   = "Clear Old Records",
+
+                    SettingsNavRow(
+                        iconRes = R.drawable.clear,
+                        iconBg = RedLight,
+                        label = "Clear Old Records",
                         onClick = { showClearDialog = true }
                     )
                 }
 
-                // ── About ────────────────────────────────────
+// ── About ────────────────────────────────────
                 SettingsSectionCard(title = "About System") {
                     SettingsInfoRow(
-                        icon     = Icons.Default.Info,
-                        iconTint = GreenDark,
-                        iconBg   = GreenLight,
-                        label    = "App Version",
-                        info     = appVersion
+                        iconRes = R.drawable.app_version,
+                        iconBg = GreenLight,
+                        label = "App Version",
+                        info = appVersion
                     )
+
                     HorizontalDivider(color = BorderGray)
-                    SettingsEmojiNavRow(
-                        emoji   = "📄",
-                        iconBg  = SurfaceGray,
-                        label   = "Privacy Policy",
+
+                    SettingsNavRow(
+                        iconRes = R.drawable.privacy_policy,
+                        iconBg = SurfaceGray,
+                        label = "Privacy Policy",
                         onClick = { onNavigate("privacy-policy") }
                     )
                 }
@@ -244,8 +248,7 @@ fun SettingsSectionCard(title: String, content: @Composable ColumnScope.() -> Un
 // ── Toggle Row ──────────────────────────────────────────────
 @Composable
 fun SettingsToggleRow(
-    icon: ImageVector,
-    iconTint: Color,
+    iconRes: Int,
     iconBg: Color,
     label: String,
     checked: Boolean,
@@ -264,60 +267,30 @@ fun SettingsToggleRow(
                 .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = iconTint,
-                modifier = Modifier.size(18.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = TextPrimary,
-            modifier = Modifier.weight(1f))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor   = Color.White,
-                checkedTrackColor   = GreenDark,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = BorderLight
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = label,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(21.dp)
             )
-        )
-    }
-}
-
-// ── Emoji Toggle Row ────────────────────────────────────────
-@Composable
-fun SettingsEmojiToggleRow(
-    emoji: String,
-    iconBg: Color,
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(emoji, fontSize = 16.sp)
         }
+
         Spacer(Modifier.width(12.dp))
-        Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = TextPrimary,
-            modifier = Modifier.weight(1f))
+
+        Text(
+            text = label,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f)
+        )
+
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor   = Color.White,
-                checkedTrackColor   = GreenDark,
+                checkedThumbColor = Color.White,
+                checkedTrackColor = GreenDark,
                 uncheckedThumbColor = Color.White,
                 uncheckedTrackColor = BorderLight
             )
@@ -328,8 +301,7 @@ fun SettingsEmojiToggleRow(
 // ── Info Row ────────────────────────────────────────────────
 @Composable
 fun SettingsInfoRow(
-    icon: ImageVector,
-    iconTint: Color,
+    iconRes: Int,
     iconBg: Color,
     label: String,
     info: String
@@ -337,7 +309,10 @@ fun SettingsInfoRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(
+                horizontal = 16.dp,
+                vertical = 12.dp
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -347,21 +322,37 @@ fun SettingsInfoRow(
                 .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = iconTint,
-                modifier = Modifier.size(18.dp))
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = label,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(21.dp)
+            )
         }
+
         Spacer(Modifier.width(12.dp))
-        Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = TextPrimary,
-            modifier = Modifier.weight(1f))
-        Text(info, color = TextMuted2, fontSize = 13.sp)
+
+        Text(
+            text = label,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f)
+        )
+
+        Text(
+            text = info,
+            color = TextMuted2,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
 // ── Emoji Nav Row ───────────────────────────────────────────
 @Composable
-fun SettingsEmojiNavRow(
-    emoji: String,
+fun SettingsNavRow(
+    iconRes: Int,
     iconBg: Color,
     label: String,
     onClick: () -> Unit
@@ -380,14 +371,30 @@ fun SettingsEmojiNavRow(
                 .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
-            Text(emoji, fontSize = 16.sp)
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = label,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(21.dp)
+            )
         }
+
         Spacer(Modifier.width(12.dp))
-        Text(label, fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, color = TextPrimary,
-            modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, contentDescription = null,
-            tint = TextMuted2, modifier = Modifier.size(16.dp))
+
+        Text(
+            text = label,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f)
+        )
+
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = TextMuted2,
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 
