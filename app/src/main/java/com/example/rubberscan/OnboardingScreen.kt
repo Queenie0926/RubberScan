@@ -13,7 +13,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Agriculture
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,13 +72,34 @@ private val onboardPages = listOf(
 )
 
 // ── Onboarding Screen ───────────────────────────────────────
+// Pages 0..onboardPages.size-1 are the info slides; the final
+// "page" is the ownership question. Answering it swaps the whole
+// screen for a tailored splash that auto-advances to onComplete().
 @Composable
 fun OnboardingScreen(onComplete: () -> Unit = {}) {
     var page by remember { mutableStateOf(0) }
-    val current = onboardPages[page]
+    var ownershipAnswer by remember { mutableStateOf<Boolean?>(null) }
+
+    val ownershipPageIndex = onboardPages.size
+    val totalPages         = onboardPages.size + 1
+    val isOwnershipPage    = page == ownershipPageIndex
+
+    // ── Post-answer splash takeover ──────────────────────
+    if (ownershipAnswer != null) {
+        SplashTransitionScreen(
+            title = if (ownershipAnswer == true)
+                "Let's protect your plantation" else "No problem — explore first",
+            subtitle = if (ownershipAnswer == true)
+                "Sign up to track diseases, monitor conditions, and manage your rubber trees."
+            else
+                "Continue as a guest to try scanning and browse the disease guide.",
+            onFinished = onComplete
+        )
+        return
+    }
 
     fun next() {
-        if (page < onboardPages.size - 1) page++ else onComplete()
+        if (page < totalPages - 1) page++
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
@@ -85,72 +109,110 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
             modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 20.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            Text(
-                "Skip",
-                color = Color(0xFF000000),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .clickable { onComplete() }
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            )
+            if (!isOwnershipPage) {
+                Text(
+                    "Skip",
+                    color = Color(0xFF000000),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .clickable { page = ownershipPageIndex }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
         }
 
-        // ── Illustration ───────────────────────────────────
+        // ── Illustration / Ownership Icon ────────────────────
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(current.bgLight)
+                .background(if (isOwnershipPage) Color(0xFFE8F5E9) else onboardPages[page].bgLight)
                 .padding(horizontal = 32.dp),
             contentAlignment = Alignment.Center
         ) {
-            AnimatedContent(
-                targetState = page,
-                transitionSpec = {
-                    (fadeIn(tween(350)) + slideInHorizontally(tween(350)) { it / 3 }) togetherWith
-                            (fadeOut(tween(350)) + slideOutHorizontally(tween(350)) { -it / 3 })
-                },
-                label = "illustration"
-            ) { pageIndex ->
-                Box(modifier = Modifier.size(224.dp)) {
-                    onboardPages[pageIndex].illustration()
+            if (isOwnershipPage) {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Agriculture,
+                        contentDescription = null,
+                        tint = Color(0xFF1B5E20),
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
+            } else {
+                AnimatedContent(
+                    targetState = page,
+                    transitionSpec = {
+                        (fadeIn(tween(350)) + slideInHorizontally(tween(350)) { it / 3 }) togetherWith
+                                (fadeOut(tween(350)) + slideOutHorizontally(tween(350)) { -it / 3 })
+                    },
+                    label = "illustration"
+                ) { pageIndex ->
+                    Box(modifier = Modifier.size(224.dp)) {
+                        onboardPages[pageIndex].illustration()
+                    }
                 }
             }
         }
 
-        // ── Text + Dots + Button ─────────────────────────────
+        // ── Text + Dots + Button(s) ───────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(if (isOwnershipPage) 340.dp else 300.dp)
                 .padding(horizontal = 32.dp, vertical = 32.dp)
         ) {
-            AnimatedContent(
-                targetState = page,
-                transitionSpec = {
-                    (fadeIn(tween(300)) + slideInHorizontally(tween(300)) { it / 4 }) togetherWith
-                            (fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -it / 4 })
-                },
-                label = "text"
-            ) { pageIndex ->
-                val p = onboardPages[pageIndex]
+            if (isOwnershipPage) {
                 Column {
                     Text(
-                        p.title,
+                        "Do you own or manage\na rubber tree plantation?",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = p.color,
+                        color = Color(0xFF1B1B1B),
                         lineHeight = 28.sp
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        p.desc,
+                        "This helps us tailor RubberScan to how you'll use it.",
                         fontSize = 14.sp,
                         color = Color(0xFF757575),
                         lineHeight = 21.sp
                     )
+                }
+            } else {
+                AnimatedContent(
+                    targetState = page,
+                    transitionSpec = {
+                        (fadeIn(tween(300)) + slideInHorizontally(tween(300)) { it / 4 }) togetherWith
+                                (fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -it / 4 })
+                    },
+                    label = "text"
+                ) { pageIndex ->
+                    val p = onboardPages[pageIndex]
+                    Column {
+                        Text(
+                            p.title,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = p.color,
+                            lineHeight = 28.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            p.desc,
+                            fontSize = 14.sp,
+                            color = Color(0xFF757575),
+                            lineHeight = 21.sp
+                        )
+                    }
                 }
             }
 
@@ -158,14 +220,17 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
 
             // ── Dot indicators ────────────────────────────────
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                onboardPages.forEachIndexed { index, _ ->
+                for (index in 0 until totalPages) {
                     val isActive = index == page
+                    val dotColor = if (!isActive) Color(0xFFD1D5DB)
+                        else if (isOwnershipPage) Color(0xFF1B5E20)
+                        else onboardPages[page].color
                     Box(
                         modifier = Modifier
                             .height(8.dp)
                             .width(if (isActive) 24.dp else 8.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(if (isActive) current.color else Color(0xFFD1D5DB))
+                            .background(dotColor)
                             .clickable { page = index }
                     )
                 }
@@ -173,24 +238,47 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Next Button ────────────────────────────────────
-            Button(
-                onClick = { next() },
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = current.color),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text(
-                    if (page < onboardPages.size - 1) "Next" else "Get Started",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.width(6.dp))
-                Icon(Icons.Default.ChevronRight, contentDescription = null,
-                    tint = Color.White, modifier = Modifier.size(20.dp))
+            // ── Buttons ────────────────────────────────────────
+            if (isOwnershipPage) {
+                Column {
+                    Button(
+                        onClick = { ownershipAnswer = true },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null,
+                            tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Yes, I do", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { ownershipAnswer = false },
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.5.dp, Color(0xFFBDBDBD)),
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = null,
+                            tint = Color(0xFF757575), modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("No, not yet", color = Color(0xFF424242), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { next() },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = onboardPages[page].color),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Next", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.Default.ChevronRight, contentDescription = null,
+                        tint = Color.White, modifier = Modifier.size(20.dp))
+                }
             }
         }
     }

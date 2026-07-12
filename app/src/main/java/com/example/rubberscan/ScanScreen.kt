@@ -57,7 +57,8 @@ fun ScanScreen(
     onCapture: () -> Unit = {},
     temperature: Float? = null,       // ← from DHT22 via ESP32 BLE
     humidity: Float? = null,          // ← null means "no reading yet"
-    isSensorConnected: Boolean = false
+    isSensorConnected: Boolean = false,
+    isGuest: Boolean = false          // ← guests don't have sensor pairing
 
 ) {
     val context        = LocalContext.current
@@ -119,8 +120,7 @@ fun ScanScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 20.dp),
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -136,19 +136,21 @@ fun ScanScreen(
                         tint = Color.White, modifier = Modifier.size(22.dp))
                 }
 
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.Black.copy(alpha = 0.4f))
-                        .padding(horizontal = 12.dp, vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Wifi, contentDescription = null,
-                        tint = if (isSensorConnected) Color(0xFF4CAF50) else Color(0xFFE57373),
-                        modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(if (isSensorConnected) "Sensor Connected" else "Sensor Offline",
-                        color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                if (!isGuest) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(Color.Black.copy(alpha = 0.4f))
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Wifi, contentDescription = null,
+                            tint = if (isSensorConnected) Color(0xFF4CAF50) else Color(0xFFE57373),
+                            modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isSensorConnected) "Sensor Connected" else "Sensor Offline",
+                            color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    }
                 }
 
                 Box(
@@ -175,42 +177,44 @@ fun ScanScreen(
             }
 
             // ── Sensor Panel ──────────────────────────────────
-            Box(modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 6 .dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .padding(2.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            if (!isGuest) {
+                Box(modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 6 .dp)
                 ) {
-                    Icon(Icons.Default.Thermostat, contentDescription = null,
-                        tint = Color(0xFFFF9800), modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(tempText, color = Color.White,
-                        fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .padding(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Thermostat, contentDescription = null,
+                            tint = Color(0xFFFF9800), modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(tempText, color = Color.White,
+                            fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
 
-                    Spacer(Modifier.width(12.dp))
-                    Box(modifier = Modifier.width(1.dp).height(16.dp)
-                        .background(Color.White.copy(alpha = 0.2f)))
-                    Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Box(modifier = Modifier.width(1.dp).height(16.dp)
+                            .background(Color.White.copy(alpha = 0.2f)))
+                        Spacer(Modifier.width(12.dp))
 
-                    Icon(Icons.Default.WaterDrop, contentDescription = null,
-                        tint = Color(0xFF64B5F6), modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(humidityText, color = Color.White,
-                        fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.WaterDrop, contentDescription = null,
+                            tint = Color(0xFF64B5F6), modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(humidityText, color = Color.White,
+                            fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
 
-                    Spacer(Modifier.width(12.dp))
-                    Box(modifier = Modifier.width(1.dp).height(16.dp)
-                        .background(Color.White.copy(alpha = 0.2f)))
-                    Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Box(modifier = Modifier.width(1.dp).height(16.dp)
+                            .background(Color.White.copy(alpha = 0.2f)))
+                        Spacer(Modifier.width(12.dp))
 
-                    PulsingDot()
-                    Spacer(Modifier.width(4.dp))
-                    Text("Live", color = Color(0xFF4CAF50), fontSize = 11.sp)
+                        PulsingDot()
+                        Spacer(Modifier.width(4.dp))
+                        Text("Live", color = Color(0xFF4CAF50), fontSize = 11.sp)
+                    }
                 }
             }
 

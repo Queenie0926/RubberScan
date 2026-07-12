@@ -23,8 +23,7 @@ import coil.request.ImageRequest
 
 @Composable
 fun WelcomeScreen(
-    onGetStarted: () -> Unit,
-    onGuest: () -> Unit
+    onGetStarted: () -> Unit
 ) {
     val context = LocalContext.current
     val imageLoader = remember {
@@ -89,34 +88,17 @@ fun WelcomeScreen(
                 )
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Button(
-                        onClick = onGetStarted,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
-                    ) {
-                        Text("Get Started")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TextButton(
-                        onClick = onGuest,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Black)
-                    ) {
-                        Icon(Icons.Outlined.AccountCircle, contentDescription = null)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Continue as Guest")
-                    }
+            Column(modifier = Modifier.padding(24.dp)) {
+                Button(
+                    onClick = onGetStarted,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                ) {
+                    Text("Get Started")
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

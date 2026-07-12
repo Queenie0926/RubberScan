@@ -36,12 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 
-// Welcome back! Sign in to continue monitoring your rubber trees.
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
-    onSignUp: () -> Unit
+    onSignUp: () -> Unit,
+    onGuest: () -> Unit
 ) {
     val context         = LocalContext.current
     val uiState        by viewModel.loginState.collectAsState()
@@ -65,11 +65,11 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(modifier = Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.size(110.dp), contentAlignment = Alignment.Center) {
                     Image(
                         painterResource(R.drawable.app_logo),
                         contentDescription = null,
-                        modifier = Modifier.size(130.dp)
+                        modifier = Modifier.size(110.dp)
                     )
                 }
             }
@@ -82,7 +82,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 28.dp)
-                        .padding(top = 32.dp, bottom = 40.dp),
+                        .padding(top = 32.dp, bottom = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Login", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
@@ -172,16 +172,22 @@ fun LoginScreen(
                         onClick = { viewModel.signInWithEmail(email, password, onLoginSuccess) }
                     )
 
-                    Spacer(Modifier.height(24.dp))
-
-                    AuthDivider()
-
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(14.dp))
 
                     GoogleButton(
                         isLoading = uiState.isLoading,
                         onClick = { viewModel.signInWithGoogle(context, isSignUp = false, onLoginSuccess) }
                     )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    AuthDivider()
+
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(onClick = { onGuest() },
+                        modifier = Modifier.fillMaxWidth(),) {
+                        Text("Continue as Guest", fontSize = 16.sp, color = Color(0xFF1B5E20))
+                    }
                 }
             }
         }
@@ -189,12 +195,12 @@ fun LoginScreen(
 }
 
 
-// New here? Create your account and start protecting your rubber trees.
 @Composable
 fun SignUpScreen(
     viewModel: AuthViewModel,
     onSignUpSuccess: () -> Unit,
-    onLogin: () -> Unit
+    onLogin: () -> Unit,
+    onGuest: () -> Unit
 ) {
     val context         = LocalContext.current
     val uiState        by viewModel.signUpState.collectAsState()
@@ -216,11 +222,11 @@ fun SignUpScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(modifier = Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.size(110.dp), contentAlignment = Alignment.Center) {
                     Image(
                         painterResource(R.drawable.app_logo),
                         contentDescription = null,
-                        modifier = Modifier.size(130.dp)
+                        modifier = Modifier.size(110.dp)
                     )
                 }
             }
@@ -318,16 +324,22 @@ fun SignUpScreen(
                         onClick = { viewModel.signUpWithEmail(name, email, password, confirmPassword, onSignUpSuccess) }
                     )
 
-                    Spacer(Modifier.height(24.dp))
-
-                    AuthDivider()
-
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(14.dp))
 
                     GoogleButton(
                         isLoading = uiState.isLoading,
                         onClick = { viewModel.signInWithGoogle(context, isSignUp = true, onSignUpSuccess) }
                     )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    AuthDivider()
+
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(onClick = { onGuest() },
+                        modifier = Modifier.fillMaxWidth(),) {
+                        Text("Continue as Guest", fontSize = 16.sp, color = Color(0xFF1B5E20))
+                    }
                 }
             }
         }

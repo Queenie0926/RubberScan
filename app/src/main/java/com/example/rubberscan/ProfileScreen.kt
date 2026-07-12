@@ -60,7 +60,7 @@ private val profileStats = listOf(
 fun ProfileScreen(
     onBack: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
-    onSignOut: () -> Unit = {},
+    onLogout: () -> Unit = {},
     userName: String = "",
     userEmail: String = "",
     onNameChange: (String) -> Unit = {}
@@ -284,9 +284,9 @@ fun ProfileScreen(
                 }
             }
 
-            // Sign Out button
+            // Log Out button
             OutlinedButton(
-                onClick = { onSignOut() },
+                onClick = { onLogout() },
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFCDD2)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350)),
@@ -297,7 +297,7 @@ fun ProfileScreen(
                 Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null,
                     modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Sign Out", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text("Log Out", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(Modifier.height(16.dp))

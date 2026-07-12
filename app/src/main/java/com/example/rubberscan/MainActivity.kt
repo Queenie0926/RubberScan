@@ -2,6 +2,7 @@ package com.example.rubberscan
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -107,49 +108,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (showGuestDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showGuestDialog = false },
-                        title = { Text("Account Required", fontWeight = FontWeight.Bold) },
-                        text  = { Text("This feature is only available to logged-in users. Sign up or log in to access your history and profile.") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showGuestDialog = false
-                                    nav.navigate("login") {
-                                        popUpTo("home") { saveState = true }
-                                    }
-                                },
-                                colors = ButtonDefaults.textButtonColors(contentColor = GreenDark)
-                            ) { Text("Log In / Sign Up", fontWeight = FontWeight.SemiBold) }
-                        },
-                        dismissButton = {
-                            TextButton(
-                                onClick = { showGuestDialog = false },
-                                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
-                            ) { Text("Cancel") }
-                        }
-                    )
-                }
-
                 Scaffold(
                     bottomBar = {
                         AnimatedVisibility(
-                            visible = currentRoute != null && currentRoute in bottomNavRoutes,
+                            visible = currentRoute != null && currentRoute in bottomNavRoutes && !isGuest,
                             enter   = fadeIn(),
                             exit    = fadeOut()
                         ) {
                             AppBottomNavBar(
                                 currentRoute = currentRoute ?: "home",
                                 onNavigate   = { route ->
-                                    if (isGuest && route in guestRestrictedRoutes) {
-                                        showGuestDialog = true
-                                    } else {
-                                        nav.navigate(route) {
-                                            popUpTo("home") { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState    = true
-                                        }
+                                    nav.navigate(route) {
+                                        popUpTo("home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState    = true
                                     }
                                 }
                             )
@@ -170,45 +142,60 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("welcome") {
                             WelcomeScreen(
-                                onGetStarted = { nav.navigate("onboarding") },
-                                onGuest      = { nav.navigate("home") { popUpTo("welcome") { inclusive = true } } }
+                                onGetStarted = { nav.navigate("onboarding") }
                             )
                         }
                         composable("login") {
+                            BackHandler(enabled = true) { this@MainActivity.moveTaskToBack(true) }
                             LoginScreen(
                                 viewModel      = authViewModel,
                                 onLoginSuccess = { nav.navigate("home") { popUpTo("welcome") { inclusive = true } } },
-                                onSignUp       = { nav.navigate("signup") }
+                                onSignUp       = { nav.navigate("signup") },
+                                onGuest      = { nav.navigate("home") { popUpTo("welcome") { inclusive = true } } }
                             )
                         }
                         composable("signup") {
+                            BackHandler(enabled = true) { this@MainActivity.moveTaskToBack(true) }
                             SignUpScreen(
                                 viewModel       = authViewModel,
                                 onSignUpSuccess = { nav.navigate("home") { popUpTo("welcome") { inclusive = true } } },
-                                onLogin         = { nav.navigate("login") }
+                                onLogin         = { nav.navigate("login") },
+                                onGuest      = { nav.navigate("home") { popUpTo("welcome") { inclusive = true } } }
                             )
                         }
                         composable("onboarding") {
-                            OnboardingScreen(onComplete = { nav.navigate("signup") })
+                            OnboardingScreen(
+                                onComplete = {
+                                    nav.navigate("signup") { popUpTo("welcome") { inclusive = true } }
+                                }
+                            )
                         }
                         composable("home") {
-                            HomeScreen(
-                                onNavigate = { route ->
-                                    if (isGuest && route in guestRestrictedRoutes) {
-                                        showGuestDialog = true
-                                    } else {
+                            BackHandler(enabled = true) { this@MainActivity.moveTaskToBack(true) }
+                            if (isGuest) {
+                                GuestHomeScreen(
+                                    onNavigate = { route -> nav.navigate(route) },
+                                    onSignUp   = {
+                                        nav.navigate("signup") {
+                                            popUpTo("home") { saveState = true }
+                                        }
+                                    }
+                                )
+                            } else {
+                                HomeScreen(
+                                    onNavigate = { route ->
                                         nav.navigate(route) {
                                             popUpTo("home") { saveState = true }
                                             launchSingleTop = true
                                             restoreState    = true
                                         }
-                                    }
-                                },
-                                userName       = displayName,
-                                bleViewModel   = bleViewModel,
-                                isGuest        = isGuest,
-                                notifViewModel = notifViewModel
-                            )
+                                    },
+                                    userName       = displayName,
+                                    bleViewModel   = bleViewModel,
+                                    isGuest        = false,
+                                    notifViewModel = notifViewModel
+                                )
+                            }
                         }
                         composable("scan") {
                             val temperature by bleViewModel.temperature.collectAsState()
@@ -219,7 +206,8 @@ class MainActivity : ComponentActivity() {
                                 onCapture         = { nav.navigate("processing") },
                                 temperature       = temperature,
                                 humidity          = humidity,
-                                isSensorConnected = bleState == BleState.CONNECTED
+                                isSensorConnected = bleState == BleState.CONNECTED,
+                                isGuest           = isGuest
                             )
                         }
                         composable("processing") {
@@ -296,9 +284,9 @@ class MainActivity : ComponentActivity() {
                             ProfileScreen(
                                 onBack     = { nav.popBackStack() },
                                 onNavigate = { route -> nav.navigate(route) },
-                                onSignOut  = {
+                                onLogout  = {
                                     authViewModel.signOut()
-                                    nav.navigate("welcome") { popUpTo(0) { inclusive = true } }
+                                    nav.navigate("login") { popUpTo(0) { inclusive = true } }
                                 },
                                 userName     = displayName,
                                 userEmail    = currentUser?.email ?: "",
