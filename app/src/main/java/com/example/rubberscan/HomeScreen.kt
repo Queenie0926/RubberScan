@@ -74,6 +74,7 @@ fun HomeScreen(
     bleViewModel   : BleViewModel? = null,
     isGuest        : Boolean = false,
     notifViewModel : NotificationViewModel? = null
+
 ) {
 
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)

@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
@@ -202,18 +201,19 @@ private fun StatBlock(label: String, value: String, dotColor: Color) {
 
 // ── Disease Guide Screen ───────────────────────────────────
 @Composable
-fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
-    var search by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf<DiseaseInfo?>(null) }
-
-    if (selected != null) {
-        DiseaseDetailView(disease = selected!!, onBack = { selected = null })
-        return
+fun DiseaseGuideScreen(
+    onBack: () -> Unit = {}
+) {
+    var selected by remember {
+        mutableStateOf<DiseaseInfo?>(null)
     }
 
-    val filtered = diseaseList.filter {
-        it.name.contains(search, ignoreCase = true) ||
-                it.shortName.contains(search, ignoreCase = true)
+    if (selected != null) {
+        DiseaseDetailView(
+            disease = selected!!,
+            onBack = { selected = null }
+        )
+        return
     }
 
     Column(
@@ -226,23 +226,42 @@ fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
+                .padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 20.dp,
+                    bottom = 20.dp
+                )
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f))
+                        .background(
+                            Color.White.copy(alpha = 0.15f)
+                        )
                         .clickable { onBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = "Back",
-                        tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronLeft,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
+
                 Spacer(Modifier.width(12.dp))
-                Text("Disease Guide", color = Color.White,
-                    fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+                Text(
+                    text = "Disease Guide",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
 
@@ -254,42 +273,20 @@ fun DiseaseGuideScreen(onBack: () -> Unit = {}) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Search bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.LightGray.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp, vertical = 10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Search, contentDescription = null,
-                        tint = Color(0xFFA5D6A7), modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Box(modifier = Modifier.weight(1f)
-                    ) {
-                        if (search.isEmpty()) {
-                            Text("Search diseases",
-                                color = Color.LightGray, fontSize = 14.sp)
-                        }
-                        BasicTextField(
-                            value = search,
-                            onValueChange = { search = it },
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                color = Color.DarkGray, fontSize = 14.sp),
-                            singleLine = true,
-                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.LightGray),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+            diseaseList.forEach { disease ->
+                DiseaseListItem(
+                    disease = disease,
+                    onClick = {
+                        selected = disease
                     }
-                }
+                )
             }
-            filtered.forEach { disease ->
-                DiseaseListItem(disease = disease, onClick = { selected = disease })
-            }
+
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
+
 
 // ── Disease List Item ───────────────────────────────────────
 @Composable
