@@ -16,17 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.example.rubberscan.ui.theme.*
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
 // ── Data model ─────────────────────────────────────────────
 data class Recommendation(
     val priority: String,
-    val icon: ImageVector,
-    val iconTint: Color,
+    val iconRes: Int,
     val title: String,
     val desc: String,
     val color: Color,
@@ -38,8 +38,7 @@ data class Recommendation(
 private val recommendations = listOf(
     Recommendation(
         priority = "Immediate",
-        icon = Icons.Default.Warning,
-        iconTint = Color(0xFFC62828),
+        iconRes = R.drawable.alert,
         title = "Schedule Immediate Treatment",
         desc = "Apply copper-based fungicide to affected areas. Use 2.5 g/L concentration. Treat early morning or late afternoon.",
         color = Color(0xFFC62828),
@@ -51,10 +50,10 @@ private val recommendations = listOf(
             "Repeat after 7 days"
         )
     ),
+
     Recommendation(
         priority = "Soon",
-        icon = Icons.Default.Spa,
-        iconTint = Color(0xFF1B5E20),
+        iconRes = R.drawable.near_term,
         title = "Apply Preventive Measures",
         desc = "Clear fallen leaves from the plantation floor to reduce spore load and disease spread.",
         color = Color(0xFF1B5E20),
@@ -65,10 +64,10 @@ private val recommendations = listOf(
             "Improve plantation drainage"
         )
     ),
+
     Recommendation(
         priority = "Weekly",
-        icon = Icons.Default.CheckCircle,
-        iconTint = Color(0xFF0D47A1),
+        iconRes = R.drawable.weekly,
         title = "Continue Monitoring",
         desc = "Conduct weekly leaf inspections. Log temperature and humidity readings with this app.",
         color = Color(0xFF0D47A1),
@@ -79,10 +78,10 @@ private val recommendations = listOf(
             "Track disease progression"
         )
     ),
+
     Recommendation(
         priority = "Optional",
-        icon = Icons.Default.Person,
-        iconTint = Color(0xFF6A1B9A),
+        iconRes = R.drawable.optional,
         title = "Consult Agricultural Technician",
         desc = "If disease spreads beyond 50% of trees, contact a certified rubber plantation technician.",
         color = Color(0xFF6A1B9A),
@@ -171,70 +170,126 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
 fun RecommendationCard(rec: Recommendation) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
+        colors = CardDefaults.cardColors(
+            containerColor = CardBg
+        ),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column {
-            // ── Top section ──────────────────────────────────
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // ── Top section ─────────────────────────────
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                // Icon box
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(rec.bg),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(rec.icon, contentDescription = null,
-                        tint = rec.iconTint, modifier = Modifier.size(20.dp))
+                    Image(
+                        painter = painterResource(rec.iconRes),
+                        contentDescription = rec.priority,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(26.dp)
+                    )
                 }
+
                 Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    // Priority badge
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Surface(
                         shape = RoundedCornerShape(50),
                         color = rec.color
                     ) {
-                        Text(rec.priority, color = Color.White,
-                            fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                        Text(
+                            text = rec.priority,
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(
+                                horizontal = 10.dp,
+                                vertical = 4.dp
+                            )
+                        )
                     }
-                    Spacer(Modifier.height(6.dp))
-                    Text(rec.title, fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp, color = Color(0xFF1C1C1C))
-                    Spacer(Modifier.height(4.dp))
-                    Text(rec.desc, color = Color(0xFF757575),
-                        fontSize = 12.sp, lineHeight = 18.sp)
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        text = rec.title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF1C1C1C),
+                        lineHeight = 19.sp
+                    )
+
+                    Spacer(Modifier.height(5.dp))
+
+                    Text(
+                        text = rec.desc,
+                        color = Color(0xFF757575),
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
                 }
             }
 
-            // ── Steps section ─────────────────────────────────
+            // ── Steps panel ──────────────────────────────
             Column(
                 modifier = Modifier
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(DividerLight)
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .fillMaxWidth()
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp,
+                        bottom = 12.dp
+                    )
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(rec.bg)
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 14.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 rec.steps.forEachIndexed { index, step ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(20.dp)
+                                .size(24.dp)
                                 .clip(CircleShape)
                                 .background(rec.color),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("${index + 1}", color = Color.White,
-                                fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "${index + 1}",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
-                        Spacer(Modifier.width(10.dp))
-                        Text(step, color = Color(0xFF555555), fontSize = 12.sp)
+
+                        Spacer(Modifier.width(12.dp))
+
+                        Text(
+                            text = step,
+                            color = Color(0xFF424242),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = 17.sp,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
             }
