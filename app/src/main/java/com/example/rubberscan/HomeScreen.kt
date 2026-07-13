@@ -601,6 +601,11 @@ fun HomeScreen(
                                                     selectedSensorNotif = notif
                                                     showSensorDialog = true
                                                 }
+                                                NotifType.TREATMENT -> {
+                                                    showNotifPanel = false
+                                                    // optionally navigate somewhere, e.g. back to recommendation screen
+                                                    // onNavigate("recommendation")
+                                                }
                                                 NotifType.INFO -> showNotifPanel = false
                                             }
                                         }

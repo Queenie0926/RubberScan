@@ -242,7 +242,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("severity") { SeverityScreen(onBack = { nav.popBackStack() }) }
                         composable("environmental-risk") { EnvironmentalRiskScreen(onBack = { nav.popBackStack() }) }
-                        composable("recommendation") { RecommendationScreen(onBack = { nav.popBackStack() }) }
+                        composable("recommendation") {
+                            RecommendationScreen(
+                                onBack = { nav.popBackStack() },
+                                notifViewModel = notifViewModel
+                            )
+                        }
                         composable("early-warning") { EarlyWarningScreen(onBack = { nav.popBackStack() }) }
                         composable("settings") {
                             val notifications by settingsViewModel.notifications.collectAsState()

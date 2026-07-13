@@ -17,7 +17,7 @@ data class AppNotification(
     val isRead: Boolean = false
 )
 
-enum class NotifType { DISEASE, SENSOR, SCAN, INFO }
+enum class NotifType { DISEASE, SENSOR, SCAN, INFO, TREATMENT}
 
 class NotificationViewModel(app: Application) : AndroidViewModel(app) {
 

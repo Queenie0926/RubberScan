@@ -22,6 +22,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import android.Manifest
+import android.content.ContentValues
+import android.content.pm.PackageManager
+import android.provider.CalendarContract
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import java.util.Calendar
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 
 // ── Data model ─────────────────────────────────────────────
 data class Recommendation(
@@ -96,7 +112,74 @@ private val recommendations = listOf(
 
 // ── Recommendation Screen ──────────────────────────────────
 @Composable
-fun RecommendationScreen(onBack: () -> Unit = {}) {
+fun RecommendationScreen(
+    onBack: () -> Unit = {},
+    notifViewModel: NotificationViewModel
+) {
+
+    val context = LocalContext.current
+    var selectedDateTime by remember { mutableStateOf<Long?>(null) }
+
+    fun saveToCalendar(startMillis: Long) {
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.DTSTART, startMillis)
+            put(CalendarContract.Events.DTEND, startMillis + 3_600_000L)
+            put(CalendarContract.Events.TITLE, "Rubber Tree Treatment - Pestalotiopsis LFD")
+            put(CalendarContract.Events.DESCRIPTION, "Apply copper-based fungicide (2.5 g/L). See RubberScan app for full recommendations.")
+            put(CalendarContract.Events.CALENDAR_ID, 1)
+            put(CalendarContract.Events.EVENT_TIMEZONE, java.util.TimeZone.getDefault().id)
+        }
+        val eventUri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+        val eventId = eventUri?.lastPathSegment?.toLongOrNull()
+
+        if (eventId != null) {
+            val reminderValues = ContentValues().apply {
+                put(CalendarContract.Reminders.EVENT_ID, eventId)
+                put(CalendarContract.Reminders.MINUTES, 30)
+                put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT)
+            }
+            context.contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues)
+
+            val formattedDate = java.text.SimpleDateFormat("MMM d, yyyy - hh:mm a", java.util.Locale.getDefault())
+                .format(java.util.Date(startMillis))
+
+            notifViewModel.add(
+                AppNotification(
+                    title = "Treatment Scheduled",
+                    message = "Copper fungicide treatment set for $formattedDate.",
+                    type = NotifType.TREATMENT
+                )
+            )
+
+            Toast.makeText(context, "Treatment scheduled!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Failed to schedule", Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun pickDateTime() {
+        val cal = Calendar.getInstance()
+        DatePickerDialog(context, { _, year, month, day ->
+            TimePickerDialog(context, { _, hour, minute ->
+                cal.set(year, month, day, hour, minute)
+                selectedDateTime = cal.timeInMillis
+                saveToCalendar(cal.timeInMillis)
+            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false).show()
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+    }
+
+    val calendarPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        if (perms[Manifest.permission.WRITE_CALENDAR] == true) {
+            pickDateTime()
+        } else {
+            Toast.makeText(context, "Calendar permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -144,9 +227,22 @@ fun RecommendationScreen(onBack: () -> Unit = {}) {
                 RecommendationCard(rec = rec)
             }
 
+
             // ── CTA Button ──────────────────────────────────
             Button(
-                onClick = { },
+                onClick = {
+                    val granted = ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.WRITE_CALENDAR
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (granted) {
+                        pickDateTime()
+                    } else {
+                        calendarPermissionLauncher.launch(
+                            arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
+                        )
+                    }
+                },
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = GreenDark),
                 modifier = Modifier
@@ -171,9 +267,13 @@ fun RecommendationCard(rec: Recommendation) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBg
+            containerColor = rec.bg
         ),
-        elevation = CardDefaults.cardElevation(1.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = rec.color.copy(alpha = 0.25f)
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -190,7 +290,7 @@ fun RecommendationCard(rec: Recommendation) {
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(rec.bg),
+                        .background(Color.White.copy(alpha = 0.75f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -228,7 +328,7 @@ fun RecommendationCard(rec: Recommendation) {
                         text = rec.title,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = Color(0xFF1C1C1C),
+                        color = rec.color,
                         lineHeight = 19.sp
                     )
 
@@ -236,7 +336,7 @@ fun RecommendationCard(rec: Recommendation) {
 
                     Text(
                         text = rec.desc,
-                        color = Color(0xFF757575),
+                        color = Color(0xFF4F4F4F),
                         fontSize = 12.sp,
                         lineHeight = 18.sp
                     )
@@ -253,7 +353,7 @@ fun RecommendationCard(rec: Recommendation) {
                         bottom = 12.dp
                     )
                     .clip(RoundedCornerShape(18.dp))
-                    .background(rec.bg)
+                    .background(Color.White.copy(alpha = 0.70f))
                     .padding(
                         horizontal = 16.dp,
                         vertical = 14.dp
