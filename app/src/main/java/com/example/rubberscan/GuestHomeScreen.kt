@@ -1,9 +1,11 @@
 package com.example.rubberscan
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,56 +41,60 @@ fun GuestHomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(GreenDark)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF1B5E20), GreenDark)
+                )
+            )
     ) {
         Column( modifier = Modifier.fillMaxSize()) {
-            // ── Header ───────────────────────────────────
+            //
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFF1B5E20), GreenDark)
-                        )
-                    )
             ) {
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 26.dp)
+                        .statusBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp)
                 ) {
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                            Image(
-                                painterResource(R.drawable.app_logo_1),
-                                contentDescription = null,
-                                modifier = Modifier.size(45.dp)
-                            )
-                        Spacer(Modifier.width(14.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("Welcome to",
-                                color = Color(0xFFA5D6A7), fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Image(painterResource(R.drawable.hand_wave),
+                                    contentDescription = null, modifier = Modifier.size(13.dp),
+                                    colorFilter = ColorFilter.tint(Color(0xFFA5D6A7)))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text("Welcome to",
+                                    color = Color(0xFFA5D6A7), fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            }
                             Text("RubberScan", color = Color.White,
                                 fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
                         }
-                        Spacer(Modifier.width(85.dp))
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = Color.White.copy(alpha = 0.15f)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        Spacer(Modifier.width(140.dp))
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color.White.copy(alpha = 0.15f)
                             ) {
-                                Icon(Icons.Default.Person, contentDescription = null,
-                                    tint = Color.White, modifier = Modifier.size(12.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("Guest Mode", color = Color.White,
-                                    fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Person, contentDescription = null,
+                                        tint = Color.White, modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        "Guest Mode", color = Color.White,
+                                        fontSize = 11.sp, fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
-                        }
                     }
                 }
             }
@@ -99,7 +106,9 @@ fun GuestHomeScreen(
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .animateContentSize(),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
@@ -169,13 +178,15 @@ private fun GuestActionCard(
     subtitle: String,
     onClick: () -> Unit
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .pressScale(interactionSource = interaction)
+            .clickable(interactionSource = interaction, indication = null) { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(18.dp),

@@ -1,5 +1,6 @@
 package com.example.rubberscan
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -82,7 +83,8 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 28.dp)
-                        .padding(top = 32.dp, bottom = 32.dp),
+                        .padding(top = 32.dp, bottom = 32.dp)
+                        .animateContentSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Login", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
@@ -239,7 +241,8 @@ fun SignUpScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 28.dp)
-                        .padding(top = 32.dp, bottom = 40.dp),
+                        .padding(top = 32.dp, bottom = 40.dp)
+                        .animateContentSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Sign Up", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)

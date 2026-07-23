@@ -113,7 +113,8 @@ fun EarlyWarningScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 24.dp),
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(

@@ -124,7 +124,8 @@ fun BLEPairingScreen(viewModel: BleViewModel, onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF1B5E20))
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -202,7 +203,8 @@ fun BLEPairingScreen(viewModel: BleViewModel, onBack: () -> Unit = {}) {
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            // Clearance for the floating nav bar overlaying the content
+            Spacer(Modifier.height(110.dp))
         }
     }
 

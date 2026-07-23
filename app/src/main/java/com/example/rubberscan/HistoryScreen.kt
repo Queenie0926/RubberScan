@@ -1,8 +1,10 @@
 package com.example.rubberscan
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -135,7 +137,8 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp)
         ) {
             // Title row
             Row(
@@ -212,13 +215,15 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
+                .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             filtered.forEach { record ->
                 InspectionRecordRow(record = record, onClick = onHistoryDetail)
             }
-            Spacer(Modifier.height(16.dp))
+            // Clearance for the floating nav bar overlaying the content
+            Spacer(Modifier.height(110.dp))
         }
     }
 }
@@ -251,6 +256,7 @@ fun InspectionRecordRow(
     record: InspectionRecord,
     onClick: () -> Unit
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -259,7 +265,8 @@ fun InspectionRecordRow(
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .pressScale(interactionSource = interaction)
+            .clickable(interactionSource = interaction, indication = null) { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(12.dp),

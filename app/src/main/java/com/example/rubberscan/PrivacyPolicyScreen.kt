@@ -34,7 +34,8 @@ fun PrivacyPolicyScreen(onBack: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(

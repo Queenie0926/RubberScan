@@ -9,6 +9,8 @@ import androidx.activity.viewModels
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -50,9 +52,9 @@ private val guestRestrictedRoutes = setOf("history", "profile")
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
     private val bleViewModel: BleViewModel by viewModels()
-
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val notifViewModel: NotificationViewModel by viewModels()
+    private val plantationViewModel: PlantationViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -77,6 +79,11 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(currentUser) {
                     displayName = currentUser?.name ?: ""
                 }
+
+                LaunchedEffect(currentUser) {
+                    plantationViewModel.setUser(currentUser?.userId)
+                }
+                val plantation by plantationViewModel.plantation.collectAsState()
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     val notifPermission = rememberLauncherForActivityResult(
@@ -108,37 +115,33 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold(
-                    bottomBar = {
-                        AnimatedVisibility(
-                            visible = currentRoute != null && currentRoute in bottomNavRoutes && !isGuest,
-                            enter   = fadeIn(),
-                            exit    = fadeOut()
-                        ) {
-                            AppBottomNavBar(
-                                currentRoute = currentRoute ?: "home",
-                                onNavigate   = { route ->
-                                    nav.navigate(route) {
-                                        popUpTo("home") { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState    = true
-                                    }
-                                }
-                            )
-                        }
-                    }
-                ) { innerPadding ->
+                // Box (not Scaffold bottomBar) so screen content fills the full
+                // height and the nav bar genuinely floats OVER it — no reserved
+                // strip behind the bar.
+                Box(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
                     // ← startDestination stays here, inside setContent
                     val startDestination = if (FirebaseAuth.getInstance().currentUser != null) "home" else "welcome"
 
                     NavHost(
                         navController      = nav,
                         startDestination   = startDestination,
-                        modifier           = androidx.compose.ui.Modifier.padding(innerPadding),
-                        enterTransition    = { slideInHorizontally(tween(220)) { it } },
-                        exitTransition     = { slideOutHorizontally(tween(220)) { -it } },
-                        popEnterTransition = { slideInHorizontally(tween(220)) { -it } },
-                        popExitTransition  = { slideOutHorizontally(tween(220)) { it } }
+                        modifier           = androidx.compose.ui.Modifier.fillMaxSize(),
+                        // Fade + subtle slide: much lighter than a full-width slide,
+                        // and fading masks first-frame composition jank on heavy screens.
+                        enterTransition = {
+                            fadeIn(tween(180)) +
+                                    slideInHorizontally(tween(180)) { it / 12 }
+                        },
+                        exitTransition = {
+                            fadeOut(tween(140))
+                        },
+                        popEnterTransition = {
+                            fadeIn(tween(180)) +
+                                    slideInHorizontally(tween(180)) { -it / 12 }
+                        },
+                        popExitTransition = {
+                            fadeOut(tween(140))
+                        }
                     ) {
                         composable("welcome") {
                             WelcomeScreen(
@@ -193,7 +196,8 @@ class MainActivity : ComponentActivity() {
                                     userName       = displayName,
                                     bleViewModel   = bleViewModel,
                                     isGuest        = false,
-                                    notifViewModel = notifViewModel
+                                    notifViewModel = notifViewModel,
+                                    plantation = plantation
                                 )
                             }
                         }
@@ -298,10 +302,38 @@ class MainActivity : ComponentActivity() {
                                 onNameChange = { newName ->
                                     displayName = newName
                                     authViewModel.updateDisplayName(newName)
-                                }
+                                },
+                                plantation = plantation
                             )
                         }
                         composable("privacy-policy") { PrivacyPolicyScreen(onBack = { nav.popBackStack() }) }
+                        composable("plantation") {
+                            PlantationScreen(
+                                existing = plantation,
+                                userId = currentUser?.userId ?: "",
+                                onSave = {p -> plantationViewModel.save(p) {nav.popBackStack()}},
+                                onBack = { nav.popBackStack() }
+                            )
+                        }
+                    }
+
+                    // ── Floating nav bar, overlaid on top of the content ──
+                    AnimatedVisibility(
+                        visible = currentRoute != null && currentRoute in bottomNavRoutes && !isGuest,
+                        enter   = fadeIn(),
+                        exit    = fadeOut(),
+                        modifier = androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.BottomCenter)
+                    ) {
+                        AppBottomNavBar(
+                            currentRoute = currentRoute ?: "home",
+                            onNavigate   = { route ->
+                                nav.navigate(route) {
+                                    popUpTo("home") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState    = true
+                                }
+                            }
+                        )
                     }
                 }
             }

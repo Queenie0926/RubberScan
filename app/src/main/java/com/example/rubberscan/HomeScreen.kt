@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import com.example.rubberscan.ui.theme.*
@@ -36,8 +37,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-
-
+import androidx.compose.ui.draw.alpha
+import com.example.rubberscan.db.entity.Plantation
 
 
 // ── Bottom Nav Item model ───────────────────────────────────
@@ -82,8 +83,8 @@ fun HomeScreen(
     userName       : String = "",
     bleViewModel   : BleViewModel? = null,
     isGuest        : Boolean = false,
-    notifViewModel : NotificationViewModel? = null
-
+    notifViewModel : NotificationViewModel? = null,
+    plantation     : Plantation? = null
 ) {
 
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -183,31 +184,8 @@ fun HomeScreen(
             tintIcon = true
         ),
 
-        StatusCardData(
-            iconRes = R.drawable.temperature,
-            label = "Temperature",
-            value = tempText,
-            sub = if (bleTemp != null) {
-                "Normal range"
-            } else {
-                "Pair sensor first"
-            },
-            valueColor = OrangeDark,
-            bgColor = OrangeLight
-        ),
-
-        StatusCardData(
-            iconRes = R.drawable.humidity,
-            label = "Humidity",
-            value = humText,
-            sub = if (bleHumidity != null) {
-                "Moderate"
-            } else {
-                "Pair sensor first"
-            },
-            valueColor = BlueDark,
-            bgColor = BlueLight
-        ),
+        // Temperature and Humidity intentionally omitted here — they're
+        // already shown in the Plantation Status card above.
 
         StatusCardData(
             iconRes = R.drawable.warning,
@@ -243,38 +221,76 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(GreenDark)
-                    .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 65.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color(0xFF14501A), GreenDark, Color(0xFF227A2B))
+                        )
+                    )
             ) {
-                Column {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 40.dp, y = (-40).dp)
+                        .size(150.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.06f))
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .offset(x = (-35).dp, y = 30.dp)
+                        .size(110.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.05f))
+                )
+
+                Column(
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 65.dp)
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        when (currentHour) {
-                            in 0..11 -> Image(painterResource(R.drawable.morning),
-                                contentDescription = null, modifier = Modifier.size(13.dp),
-                                colorFilter = ColorFilter.tint(Color.White))
-                            in 12..17 -> Image(painterResource(R.drawable.afternoon),
-                                contentDescription = null, modifier = Modifier.size(13.dp),
-                                colorFilter = ColorFilter.tint(Color.White))
-                            else -> Image(painterResource(R.drawable.evening),
-                                contentDescription = null, modifier = Modifier.size(13.dp),
-                                colorFilter = ColorFilter.tint(Color.White))
-                        }
+                        Image(painterResource(R.drawable.hand_wave),
+                            contentDescription = null, modifier = Modifier.size(13.dp),
+                            colorFilter = ColorFilter.tint(Color(0xFFA5D6A7)))
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text("$greeting,", color = Color.White,
-                            fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("$greeting,", color = Color(0xFFA5D6A7),
+                            fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (userName.isNotBlank()) "$userName!" else "Welcome!",
-                        color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold
+                        color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text("📍 Marilog District Plantation",
-                        color = Color(0xFFA5D6A7), fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Plantation shown as a chip instead of bare text
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = Color.White.copy(alpha = 0.15f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.LocationOn, contentDescription = null,
+                                tint = Color.White, modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(Modifier.width(5.dp))
+                            Text(
+                                text = plantation?.name ?: "Add your plantation",
+                                color = Color.White, fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
+                        .statusBarsPadding()
+                        .padding(end = 20.dp, top = 12.dp)
                         .size(48.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -319,7 +335,7 @@ fun HomeScreen(
                 }
             }
 
-            // ── Plantation Status Card ────────────────────
+            // Plantation status
             Box(modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .offset(y = (-48).dp)
@@ -370,10 +386,12 @@ fun HomeScreen(
                                 .align(Alignment.CenterVertically), color = BorderGray)
                             Column(modifier = Modifier.weight(1f),
                                 horizontalAlignment = Alignment.CenterHorizontally) {
+                                Spacer(Modifier.height(4.dp))
                                 Image(painter = painterResource(R.drawable.record),
                                     contentDescription = conditionText, contentScale = ContentScale.Fit,
                                     colorFilter = ColorFilter.tint(conditionColor),
-                                    modifier = Modifier.size(24.dp))
+                                    modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.height(4.dp))
                                 Text(conditionText, fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp, color = conditionColor)
                                 Text("Conditions", color = TextMuted, fontSize = 11.sp)
@@ -383,7 +401,7 @@ fun HomeScreen(
                 }
             }
 
-            // ── Quick Actions + Sensor Status + Recent ────
+            //Quick actions
             Column(modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .offset(y = (-36).dp)
@@ -394,12 +412,14 @@ fun HomeScreen(
                 Row(modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     quickActions.forEach { action ->
+                        val actionInteraction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                         Column(
                             modifier = Modifier
                                 .weight(1f)
+                                .pressScale(interactionSource = actionInteraction)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(action.bgColor)
-                                .clickable { onNavigate(action.route) }
+                                .clickable(interactionSource = actionInteraction, indication = null) { onNavigate(action.route) }
                                 .padding(vertical = 12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -420,15 +440,21 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
+                PlantationCard(
+                    plantation = plantation,
+                    onNavigate = { onNavigate("plantation") }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
                 Text("Sensor Status", fontWeight = FontWeight.Black,
                     fontSize = 15.sp, color = Color(0xFF4A4A4A),
                     modifier = Modifier.padding(bottom = 10.dp))
                 Row(modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    statusCards.chunked(2).forEach { rowCards ->
-                        Column(modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            rowCards.forEach { card -> SensorStatusCard(card) }
+                    statusCards.forEach { card ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            SensorStatusCard(card)
                         }
                     }
                 }
@@ -454,7 +480,8 @@ fun HomeScreen(
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                // Clearance for the floating nav bar overlaying the content
+                Spacer(Modifier.height(110.dp))
             }
         } // ← end of main Column
 
@@ -684,15 +711,23 @@ fun AppBottomNavBar(currentRoute: String, onNavigate: (String) -> Unit) {
         BottomNavItem(Icons.Default.Person,          "Profile", "profile")
     )
 
-    Surface(
-        color = Color.White,
-        shadowElevation = 12.dp,
-        modifier = Modifier.fillMaxWidth()
+    // Floating pill: transparent outer box provides the inset,
+    // the inner Surface is the visible rounded bar.
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
+        Surface(
+            color = Color.White,
+            shape = RoundedCornerShape(28.dp),
+            shadowElevation = 12.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
                 .height(64.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
@@ -734,6 +769,93 @@ fun AppBottomNavBar(currentRoute: String, onNavigate: (String) -> Unit) {
                 }
             }
         }
+        }
+    }
+}
+
+@Composable
+fun PlantationCard(plantation: Plantation?, onNavigate: () -> Unit) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(1.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .pressScale(interactionSource = interaction)
+            .clickable(interactionSource = interaction, indication = null) { onNavigate() }
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+
+            // ── Card header row ───────────────────────────
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(GreenLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null,
+                        tint = GreenDark, modifier = Modifier.size(22.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        if (plantation != null) "My Plantation" else "Add your plantation",
+                        color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        plantation?.name ?: "Register to start tracking",
+                        fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextPrimary
+                    )
+                }
+                Icon(
+                    if (plantation != null) Icons.Default.Edit else Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color(0xFF9CA3AF), modifier = Modifier.size(18.dp)
+                )
+            }
+
+            // ── Location detail ───────────────────────────
+            if (plantation != null) {
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+                Spacer(Modifier.height(10.dp))
+
+                if (plantation.address.isNotBlank()) {
+                    PlantationDetailRow("Address", plantation.address)
+                }
+                PlantationDetailRow("Barangay", plantation.barangay)
+                PlantationDetailRow("City / Municipality", plantation.city)
+                PlantationDetailRow("Province", plantation.province)
+                PlantationDetailRow("Region", plantation.region)
+
+
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlantationDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            label,
+            color = TextMuted, fontSize = 12.sp,
+            modifier = Modifier.width(120.dp)
+        )
+        Text(
+            value.ifBlank { "—" },
+            color = TextPrimary, fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -783,16 +905,18 @@ fun SensorStatusCard(data: StatusCardData) {
     }
 }
 
-// ── Recent Inspection Row ───────────────────────────────────
+
 @Composable
 fun RecentInspectionRow(item: RecentInspection, onClick: () -> Unit) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .pressScale(interactionSource = interaction)
+            .clickable(interactionSource = interaction, indication = null) { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(12.dp),

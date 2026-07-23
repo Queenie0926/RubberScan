@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -26,6 +25,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.ui.Alignment
+import com.example.rubberscan.db.entity.Plantation
 
 // ── Data models ────────────────────────────────────────────
 data class ProfileMenuItem(
@@ -63,7 +64,8 @@ fun ProfileScreen(
     onLogout: () -> Unit = {},
     userName: String = "",
     userEmail: String = "",
-    onNameChange: (String) -> Unit = {}
+    onNameChange: (String) -> Unit = {},
+    plantation: Plantation? = null
 ) {
 
     var showEditDialog by remember { mutableStateOf(false) }
@@ -120,7 +122,8 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp)
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 80.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -201,8 +204,30 @@ fun ProfileScreen(
                             Icon(Icons.Default.LocationOn, contentDescription = null,
                                 tint = TextMuted2, modifier = Modifier.size(12.dp))
                             Spacer(Modifier.width(3.dp))
-                            Text("Marilog District, Davao City",
-                                color = TextMuted2, fontSize = 11.sp)
+                            if(plantation != null){
+                                Text(
+                                    plantation.name,
+                                    color = TextMuted2, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            } else {
+                                Text(
+                                    "Add your plantation",
+                                    color = TextMuted2, fontSize = 12.sp)
+                            }
+                        }
+                        if(plantation != null){
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(modifier = Modifier.width(15.dp))
+                                if (plantation.address.isNotBlank()) {
+                                    Text(
+                                        "${plantation.address}, ",
+                                        color = TextMuted2, fontSize = 12.sp
+                                    )
+                                }
+                                Text(
+                                    "${plantation.barangay}, ${plantation.city}",
+                                    color = TextMuted2, fontSize = 12.sp
+                                )
+                            }
                         }
                         Spacer(Modifier.height(6.dp))
                         Surface(shape = RoundedCornerShape(50), color = Color(0xFFE8F5E9)) {
@@ -300,7 +325,8 @@ fun ProfileScreen(
                 Text("Log Out", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
 
-            Spacer(Modifier.height(16.dp))
+            // Clearance for the floating nav bar overlaying the content
+            Spacer(Modifier.height(110.dp))
         }
     }
 }

@@ -104,12 +104,12 @@ fun OnboardingScreen(onComplete: () -> Unit = {}) {
 
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
 
-        // ── Skip ────────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 20.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            if (!isOwnershipPage) {
+        // ── Skip (hidden on the ownership page so the green fills to top) ──
+        if (!isOwnershipPage) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 20.dp, end = 20.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
                 Text(
                     "Skip",
                     color = Color(0xFF000000),

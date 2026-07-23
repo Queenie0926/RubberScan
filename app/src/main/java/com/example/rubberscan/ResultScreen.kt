@@ -217,7 +217,7 @@ fun ResultScreen(
                 .padding(
                     start = 20.dp,
                     end = 20.dp,
-                    top = 20.dp,
+                    top = 40.dp,
                     bottom = 20.dp
                 ),
             verticalAlignment = Alignment.CenterVertically

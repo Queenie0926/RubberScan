@@ -101,7 +101,7 @@ private val diseaseList = listOf(
         id = "algal",
         name = "Algal Leaf Spot",
         shortName = "Algal",
-        color = Color(0xFF00FFCE),
+        color = Color(0xF000FFCE),
         bg = Color(0xFFE0F7FA),
         severity = "Mild–Moderate",
         prevalence = "Humid Areas",
@@ -226,10 +226,11 @@ fun DiseaseGuideScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
+                .statusBarsPadding()
                 .padding(
                     start = 20.dp,
                     end = 20.dp,
-                    top = 20.dp,
+                    top = 16.dp,
                     bottom = 20.dp
                 )
         ) {
@@ -282,7 +283,8 @@ fun DiseaseGuideScreen(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            // Clearance for the floating nav bar overlaying the content
+            Spacer(Modifier.height(110.dp))
         }
     }
 }
@@ -291,13 +293,15 @@ fun DiseaseGuideScreen(
 // ── Disease List Item ───────────────────────────────────────
 @Composable
 fun DiseaseListItem(disease: DiseaseInfo, onClick: () -> Unit) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBg),
         elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .pressScale(interactionSource = interaction)
+            .clickable(interactionSource = interaction, indication = null) { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -354,7 +358,8 @@ fun DiseaseDetailView(disease: DiseaseInfo, onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(GreenDark)
-                .padding(20.dp)
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
